@@ -7,6 +7,7 @@
 
 #include "loop-closure-handler/inlier-index-with-reprojection-error.h"
 
+// TODO: (michbaum) Can change the restrictive constraints for loop closures here
 DEFINE_double(lc_ransac_pixel_sigma, 2.0, "Pixel sigma for ransac.");
 DEFINE_int32(lc_min_inlier_count, 10, "Minimum inlier count for loop closure.");
 DEFINE_int32(

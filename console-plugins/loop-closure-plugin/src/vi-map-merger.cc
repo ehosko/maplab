@@ -44,6 +44,7 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
     return common::kUnknownError;
   }
 
+  // TODO: (michbaum) We don't want to do this
   if (FLAGS_lc_against_cumulative_map) {
     CHECK(!FLAGS_lc_only_against_other_missions)
         << "When using a cumulative map all the missions are included in the "
@@ -67,6 +68,7 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
       loop_detector.detectLoopClosuresAndMergeLandmarks(*it, map_);
     }
   } else {
+    // TODO: (michbaum) We want to use this branch, but need to change the logic to only loop close the benchmark missions against the to-be-evaluated mission
     // We want to try to loop close every mission pair
     for (vi_map::MissionIdList::const_iterator it = mission_ids.begin();
          it != mission_ids.end(); ++it) {
@@ -81,6 +83,7 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
         if (FLAGS_lc_only_against_other_missions && *jt == *it) {
           continue;
         }
+        // TODO: (michbaum) might need to not merge landmarks for the eval pipeline
         loop_detector.detectLoopClosuresAndMergeLandmarks(*jt, map_);
       }
     }

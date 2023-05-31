@@ -1,0 +1,106 @@
+sensors:
+  - id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+    topic: /imu0
+    description: "VI-Sensor IMU (ADIS16448)"
+    sensor_type: IMU
+    sigmas:
+      acc_noise_density: 4e-3 # correct
+      acc_bias_random_walk_noise_density: 6e-3 # incorrect was 4e-3
+      gyro_noise_density: 0.0003394 # incorrect was 1e-4
+      gyro_bias_random_walk_noise_density: 0.000038785 # incorrect was 1e-4
+    saturation_accel_max_mps2: 150.0 # found nothing corresponding
+    saturation_gyro_max_radps: 7.5 # found nothing corresponding
+    gravity_magnitude_mps2: 9.8066 # incorrect was 9.81
+
+  - id: aabb23479caf7592b35518478a2fe08f
+    sensor_type: ODOMETRY_6DOF
+    description: "ROVIOLI in Odometry mode"
+    topic: /odometry/maplab_odom_T_M_I
+
+# Useful? Even used at all?
+  - id: ff000000000000000000000000000001
+    sensor_type: EXTERNAL_FEATURES
+    description: "SIFT features"
+    topic: /maplab_features0
+    target_sensor: 54812562fa109c40fe90b29a59dd7798
+    feature_type: SIFT
+
+# TODO: (michbaum) Check if this is the right sensor type to use even for one camera -> Seems so yes
+  - id: 412eab8e4058621f7036b5e765dfe812
+    sensor_type: NCAMERA
+    description: "VISensor - Maze - original_calibration"
+    topic: ""
+    cameras:
+      - camera:
+          id: 54812562fa109c40fe90b29a59dd7798
+          sensor_type: CAMERA
+          description: "VI-Sensor cam0"
+          topic: /cam0
+          line-delay-nanoseconds: 0
+          image_height: 480
+          image_width: 640
+          type: pinhole
+          intrinsics:
+            cols: 1
+            rows: 4
+            data: [320.0, 320.0, 320.0, 240.0]
+          distortion:
+            type: none
+            parameters:
+              cols: 1
+              rows: 5
+              data: [0.0, 0.0, 0.0, 0.0, 0.0]
+        T_B_C:
+          cols: 4
+          rows: 4 # TODO: (michbaum) have to double check this transform from camera to IMU frame
+          data: [ 0.0,  0.0, 1.0, 0.0,
+                 -1.0,  0.0, 0.0, 0.0,
+                  0.0, -1.0, 0.0, 0.0,
+                  0.0,  0.0, 0.0, 1.0]
+
+extrinsics:
+  - sensor_id: 412eab8e4058621f7036b5e765dfe812
+    base_sensor_id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+    T_B_S:
+      cols: 4
+      rows: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]
+
+  - sensor_id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+    base_sensor_id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+    T_B_S:
+      rows: 4
+      cols: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]
+
+  - sensor_id: aabb23479caf7592b35518478a2fe08f
+    base_sensor_id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+    T_B_S:
+      rows: 4
+      cols: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]
+
+# Remove if unnecessary
+  - sensor_id: ff000000000000000000000000000001
+    base_sensor_id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
+    T_B_S:
+      rows: 4
+      cols: 4
+      data:
+        - [1,0,0,0]
+        - [0,1,0,0]
+        - [0,0,1,0]
+        - [0,0,0,1]
+

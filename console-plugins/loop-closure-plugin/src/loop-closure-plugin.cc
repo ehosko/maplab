@@ -69,6 +69,7 @@ bool areQualitiesOfAllLandmarksSet(const vi_map::VIMap& map) {
   return true;
 }
 
+// TODO: (michbaum) Need to change the logic here to only find loop closures between benchmark mission and to-be-evaluated mission.
 int LoopClosurePlugin::findLoopClosuresBetweenAllMissions() const {
   std::string selected_map_key;
   if (!getSelectedMapKeyIfSet(&selected_map_key)) {

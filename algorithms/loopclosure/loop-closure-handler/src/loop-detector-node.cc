@@ -665,6 +665,8 @@ bool LoopDetectorNode::computeAbsoluteTransformFromFrameMatches(
   return ransac_ok;
 }
 
+// TODO: (michbaum) This is the function that actually gets the vertex poses, \
+if we want to build something ourselves, we would need this
 void LoopDetectorNode::queryVertexInDatabase(
     const pose_graph::VertexId& query_vertex_id, const bool merge_landmarks,
     const bool add_lc_edges, vi_map::VIMap* map,
@@ -754,11 +756,15 @@ void LoopDetectorNode::queryVertexInDatabase(
         landmark_pairs_merged, kVertexIdClosestToStructureMatches, map_mutex);
 
     if (ransac_ok) {
+      // TODO: (michbaum) Found a loop closure/re-localization of the vertex -> Save it!
       map_mutex->lock();
       const pose::Transformation& T_M_I = query_vertex.get_T_M_I();
       const pose::Transformation T_G_M2 = T_G_I_ransac * T_M_I.inverse();
       map_mutex->unlock();
 
+      // TODO: (michbaum) Dump the loop closure/re-localization to a csv file 
+      //                  Or already evaluate ground truth error? 
+      //                  -> Would need to pipe ground truth in here
       T_G_M2_vector->push_back(T_G_M2);
       inlier_counts->push_back(num_inliers);
     }
