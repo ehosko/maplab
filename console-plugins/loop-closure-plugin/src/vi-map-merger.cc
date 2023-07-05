@@ -50,6 +50,8 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
         << "When using a cumulative map all the missions are included in the "
            "query database and queried against. They can not be separated.";
 
+    VLOG(1) << "Loop closing against cumulative map" << std::endl;
+
     // Create joint global map of landmarks for queries
     loop_detector_node::LoopDetectorNode loop_detector;
     if (plotter_ != nullptr) {
@@ -70,6 +72,9 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
   } else {
     // TODO: (michbaum) We want to use this branch, but need to change the logic to only loop close the benchmark missions against the to-be-evaluated mission
     // We want to try to loop close every mission pair
+    // This is the basic way for a single map lc
+    VLOG(1) << "Loop closing between all missions" << std::endl;
+    
     for (vi_map::MissionIdList::const_iterator it = mission_ids.begin();
          it != mission_ids.end(); ++it) {
       CHECK(it->isValid());

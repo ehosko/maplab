@@ -172,6 +172,10 @@ void ViwlsGraphRvizPlotter::publishEdges(
   visualization::Color color = color_in;
   visualization::LineSegmentVector line_segments;
 
+  VLOG(1) << "Calling publish edges with edge type: "
+          << pose_graph::Edge::edgeTypeToString(edge_type) << std::endl
+          << "Number of missions: " << missions.size();  
+
   for (const vi_map::MissionId& mission_id : missions) {
     pose_graph::EdgeIdList edges;
     map.getAllEdgeIdsInMissionAlongGraph(mission_id, &edges);
@@ -186,7 +190,57 @@ void ViwlsGraphRvizPlotter::publishEdges(
         std::remove_if(edges.begin(), edges.end(), edge_type_different),
         edges.end());
 
+    VLOG(1) << "Number of edges in mission " << mission_id 
+            << " of the requested type: " << edges.size();
+
     const unsigned int marker_id = mission_id.hashToSizeT();
+
+    // TODO: (michbaum) Publish all from to's from the remaining edges
+    if (edge_type == pose_graph::Edge::EdgeType::kLoopClosure) {
+      int edge_idx = 0;
+      for (const pose_graph::EdgeId& edge_id : edges) {
+        const vi_map::Edge& edge = map.getEdgeAs<vi_map::Edge>(edge_id);
+        const vi_map::Vertex& vertex_from = map.getVertex(edge.from());
+        const vi_map::Vertex& vertex_to = map.getVertex(edge.to());
+        // Pulish the timestamps of all frames in the from vertex.
+        const size_t num_frames = vertex_from.numFrames();
+        VLOG(1) << "-----------------DEBUGGING------------------" << std::endl;
+        // VLOG(1) << "Publishing loop closure edge with " << num_frames
+        //         << " frames.";
+        for (size_t frame_idx = 0u; frame_idx < num_frames; ++frame_idx) {
+          const aslam::VisualFrame& from_frame = vertex_from.getVisualFrame(frame_idx);
+          // const cv::Mat& image = from_frame.getRawImage();
+          // // Show the loop closure image
+          // const std::string windowTitle = "Loop closure image for the " + std::to_string(edge_idx) + ". edge's from frame.";
+          // cv::namedWindow(windowTitle, cv::WINDOW_NORMAL);
+          // cv::imshow(windowTitle, image);
+          const int64_t timestamp_ns_from = from_frame.getTimestampNanoseconds();
+          const Eigen::Vector3d& p_M_I_from = vertex_from.get_p_M_I();
+          VLOG(1) << "Timestamp of the " << frame_idx 
+                  << "th frame of the from vertex: " << timestamp_ns_from
+                  << "Pose of the " << frame_idx 
+                  << "th frame of the from vertex: " << p_M_I_from;
+
+          const aslam::VisualFrame& to_frame = vertex_to.getVisualFrame(frame_idx);
+          const Eigen::Vector3d& p_M_I_to = vertex_to.get_p_M_I();
+          // const cv::Mat& image = to_frame.getRawImage();
+          // // Show the loop closure image
+          // const std::string windowTitle = "Loop closure image for the " + std::to_string(edge_idx) + ". edge's to frame.";
+          // cv::namedWindow(windowTitle, cv::WINDOW_NORMAL);
+          // cv::imshow(windowTitle, image);
+          const int64_t timestamp_ns_to = to_frame.getTimestampNanoseconds();
+          VLOG(1) << "Timestamp of the " << frame_idx 
+                  << "th frame of the to vertex: " << timestamp_ns_to
+                  << "Pose of the " << frame_idx
+                  << "th frame of the to vertex: " << p_M_I_to;
+
+          VLOG(1) << "Distance between the " << frame_idx
+                  << "th frames of the from and to vertices: " 
+                  << (p_M_I_from - p_M_I_to).norm() << std::endl;
+        }
+        // ++edge_idx;
+      }
+    }
 
     publishEdges(
         map, edges, color, marker_id,
