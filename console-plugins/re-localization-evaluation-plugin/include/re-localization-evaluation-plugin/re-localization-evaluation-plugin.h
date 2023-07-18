@@ -3,21 +3,17 @@
 
 #include <string>
 
-#include <console-common/console-plugin-base-with-plotter.h>
+#include <console-common/console.h>
 
 namespace common {
 class Console;
 }  // namespace common
 
-namespace visualization {
-class ViwlsGraphRvizPlotter;
-}  // namespace visualization
-
 namespace re_localization_evaluation_plugin {
-class ReLocalizationEvaluationPlugin : public common::ConsolePluginBaseWithPlotter {
+class ReLocalizationEvaluationPlugin : public common::ConsolePluginBase {
  public:
   ReLocalizationEvaluationPlugin(
-      common::Console* console, visualization::ViwlsGraphRvizPlotter* plotter);
+      common::Console* console);
 
   virtual std::string getPluginId() const {
     return "relocalization-evaluation";

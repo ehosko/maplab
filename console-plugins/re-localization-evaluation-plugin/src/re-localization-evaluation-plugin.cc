@@ -1,12 +1,14 @@
 #include "re-localization-evaluation-plugin/re-localization-evaluation-plugin.h"
 
 #include <console-common/console.h>
-#include <descriptor-projection/train-projection-matrix.h>
 #include <map-manager/map-manager.h>
+#include <vi-map/vi-map.h>
+
+// TODO: (michbaum) Check what is needed
+#include <descriptor-projection/train-projection-matrix.h>
 #include <posegraph/pose-graph.h>
 #include <posegraph/unique-id.h>
 #include <vi-map/vi-map-serialization.h>
-#include <vi-map/vi-map.h>
 #include <visualization/viwls-graph-plotter.h>
 
 
@@ -14,45 +16,21 @@ DECLARE_string(map_mission);
 
 namespace re_localization_evaluation_plugin {
 
-LoopClosurePlugin::LoopClosurePlugin(
-    common::Console* console, visualization::ViwlsGraphRvizPlotter* plotter)
-    : common::ConsolePluginBaseWithPlotter(console, plotter) {
+ReLocalizationEvaluationPlugin::ReLocalizationEvaluationPlugin(
+    common::Console* console)
+    : common::ConsolePluginBase(console) {
   CHECK_NOTNULL(console);
 
   addCommand(
-      {"lc", "loopclosure_all_missions"},
-      [this]() -> int { return findLoopClosuresBetweenAllMissions(); },
-      "Find loop closures between all missions.", common::Processing::Sync);
+      {"rle", "re_localization_evaluation_all_query_missions"},
+      [this]() -> int { return evaluateReLocalizationForAllBenchmarkMissions(); },
+      "Evaluate the re-localization accuracy between all query missions and the to be evaluated mission.", common::Processing::Sync);
 
   addCommand(
-      {"lcom", "loopclosure_one_mission"},
-      [this]() -> int { return findLoopClosuresInOneMission(); },
-      "Find loop closures in one mission.", common::Processing::Sync);
+      {"rleom", "re_localization_evaluation_one_query_mission"},
+      [this]() -> int { return evaluateReLocalizationForOneBenchmarkMission(); },
+      "Evaluate the re-localization accuracy between one query missions and the to be evaluated mission.", common::Processing::Sync);
 
-  addCommand(
-      {"dlc", "delete_loopclosure_edges"},
-      [this]() -> int { return deleteAllLoopClosureEdges(); },
-      "Delete loop closure edges of all missions.", common::Processing::Sync);
-
-  addCommand(
-      {"train_projection_matrix"},
-      [this]() -> int {
-        std::string selected_map_key;
-        if (!getSelectedMapKeyIfSet(&selected_map_key)) {
-          return common::kStupidUserError;
-        }
-        vi_map::VIMapManager map_manager;
-        vi_map::VIMapManager::MapWriteAccess map =
-            map_manager.getMapWriteAccess(selected_map_key);
-
-        descriptor_projection::TrainProjectionMatrix(*map);
-
-        return common::kSuccess;
-      },
-      "Train a new descriptor projection matrix based on the selected map. Use "
-      "--lc_projection_matrix_filename to specify the target file for the "
-      "projecton matrix.",
-      common::Processing::Sync);
 }
 
 bool areQualitiesOfAllLandmarksSet(const vi_map::VIMap& map) {
@@ -69,7 +47,7 @@ bool areQualitiesOfAllLandmarksSet(const vi_map::VIMap& map) {
 }
 
 // TODO: (michbaum) Need to change the logic here to only find loop closures between benchmark mission and to-be-evaluated mission.
-int LoopClosurePlugin::findLoopClosuresBetweenAllMissions() const {
+int ReLocalizationEvaluationPlugin::evaluateReLocalizationForAllBenchmarkMissions() const {
   std::string selected_map_key;
   if (!getSelectedMapKeyIfSet(&selected_map_key)) {
     return common::kStupidUserError;
@@ -84,11 +62,12 @@ int LoopClosurePlugin::findLoopClosuresBetweenAllMissions() const {
     return common::kStupidUserError;
   }
 
-  VIMapMerger merger(map.get(), getPlotterUnsafe());
-  return merger.findLoopClosuresBetweenAllMissions();
+  // VIMapMerger merger(map.get(), getPlotterUnsafe());
+  // return merger.findLoopClosuresBetweenAllMissions();
+  return common::kSuccess;
 }
 
-int LoopClosurePlugin::findLoopClosuresInOneMission() const {
+int ReLocalizationEvaluationPlugin::evaluateReLocalizationForOneBenchmarkMission() const {
   std::string selected_map_key;
   if (!getSelectedMapKeyIfSet(&selected_map_key)) {
     return common::kStupidUserError;
@@ -113,27 +92,12 @@ int LoopClosurePlugin::findLoopClosuresInOneMission() const {
   map->ensureMissionIdValid(FLAGS_map_mission, &mission_id);
   mission_ids.emplace_back(mission_id);
 
-  VIMapMerger merger(map.get(), getPlotterUnsafe());
-  return merger.findLoopClosuresBetweenMissions(mission_ids);
-}
-
-int LoopClosurePlugin::deleteAllLoopClosureEdges() const {
-  std::string selected_map_key;
-  if (!getSelectedMapKeyIfSet(&selected_map_key)) {
-    return common::kStupidUserError;
-  }
-  vi_map::VIMapManager map_manager;
-  vi_map::VIMapManager::MapWriteAccess map =
-      map_manager.getMapWriteAccess(selected_map_key);
-
-  const size_t number_of_loop_closure_edges_removed =
-      map->removeLoopClosureEdges();
-  LOG(INFO) << "Removed " << number_of_loop_closure_edges_removed
-            << " loop closures edges.";
+  // VIMapMerger merger(map.get(), getPlotterUnsafe());
+  // return merger.findLoopClosuresBetweenMissions(mission_ids);
   return common::kSuccess;
 }
 
-}  // namespace loop_closure_plugin
+}  // namespace re_localization_evaluation_plugin
 
-MAPLAB_CREATE_CONSOLE_PLUGIN_WITH_PLOTTER(
-    loop_closure_plugin::LoopClosurePlugin);
+MAPLAB_CREATE_CONSOLE_PLUGIN(
+    re_localization_evaluation_plugin::ReLocalizationEvaluationPlugin);
