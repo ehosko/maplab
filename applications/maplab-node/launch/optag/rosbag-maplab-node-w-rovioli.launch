@@ -40,7 +40,7 @@
 		<param name="vio_camera_topic_suffix" value="image_raw"/>
 
 		<!-- MAPLAB_NODE_CONFIG -->
-		<param name="map_save_every_n_sec" value="30"/>
+		<param name="map_save_every_n_sec" value="0"/>
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/> -->
 		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/>
 	</node>
