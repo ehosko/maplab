@@ -5,14 +5,14 @@
 
 	<!-- ROVIOLI -->
 	<group ns="rovioli">
-		<node name="rovioli" pkg="rovioli" type="rovioli" output="screen" clear_params="true">
+		<node name="rovioli_rosbag" pkg="rovioli" type="rovioli" output="screen" clear_params="true">
 
 			<!-- GENERAL PARAMS -->
-			<rosparam command="load" file="$(find maplab_node)/launch/maze/ros/maze-rovioli-rosparam.yaml"/>
+			<rosparam command="load" file="$(find maplab_node)/launch/optag/ros/rosbag-rovioli-rosparam.yaml"/>
 
 			<!-- ROBOT SPECIFIC PARAMS -->
 			<!-- SENSORS -->
-			<param name="sensor_calibration_file" value="$(find maplab_node)/launch/maze/calib/maze.yaml"/>
+			<param name="sensor_calibration_file" value="$(find maplab_node)/launch/optag/calib/rosbag.yaml"/>
 			<param name="imu_to_camera_time_offset_ns" value="0"/>
 			<!-- Make sure that the suffix of all the camera topics to be used matches this here -->
 			<param name="vio_camera_topic_suffix" value="image_raw"/>
@@ -27,20 +27,21 @@
 	</group>
 
 	<!-- MAPLAB -->
-	<node name="maplab_node" pkg="maplab_node" type="maplab_node" output="screen" clear_params="true">
+	<node name="maplab_node_rosbag" pkg="maplab_node" type="maplab_node" output="screen" clear_params="true">
 
 		<!-- GENERAL PARAMS -->
-		<rosparam command="load" file="$(find maplab_node)/launch/maze/ros/maze-maplab-node-rosparam.yaml"/>
+		<rosparam command="load" file="$(find maplab_node)/launch/optag/ros/rosbag-maplab-node-rosparam.yaml"/>
 
 		<!-- ROBOT SPECIFIC PARAMS -->
 		<!-- SENSORS -->
-		<param name="sensor_calibration_file" value="$(find maplab_node)/launch/maze/calib/maze.yaml"/>
+		<param name="sensor_calibration_file" value="$(find maplab_node)/launch/optag/calib/rosbag.yaml"/>
 		<param name="imu_to_camera_time_offset_ns" value="0"/>
 		<!-- Make sure that the suffix of all the camera topics to be used matches this here -->
 		<param name="vio_camera_topic_suffix" value="image_raw"/>
 
 		<!-- MAPLAB_NODE_CONFIG -->
-		<param name="map_save_every_n_sec" value="0"/>
+		<param name="map_save_every_n_sec" value="30"/>
+		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/> -->
 		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/>
 	</node>
 </launch>
