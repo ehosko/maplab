@@ -74,7 +74,7 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
     // We want to try to loop close every mission pair
     // This is the basic way for a single map lc
     VLOG(1) << "Loop closing between all missions" << std::endl;
-    
+    // TODO: (ehosko) Outer loop not needed - only loop against first map
     for (vi_map::MissionIdList::const_iterator it = mission_ids.begin();
          it != mission_ids.end(); ++it) {
       CHECK(it->isValid());

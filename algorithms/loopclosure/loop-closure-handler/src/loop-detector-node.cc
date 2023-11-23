@@ -900,6 +900,7 @@ bool LoopDetectorNode::detectLoopClosuresVerticesToDatabase(
     return false;
   }
 
+  // TODO: (ehosko) Write to csv file
   std::stringstream result_ss;
   result_ss << "\nLoop closure result:";
   result_ss << "\n - missions in database: " << ss.str();

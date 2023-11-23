@@ -4,6 +4,7 @@
 #include <map-manager/map-manager.h>
 #include <vi-map/vi-map.h>
 
+
 // TODO: (michbaum) Check what is needed
 #include <descriptor-projection/train-projection-matrix.h>
 #include <posegraph/pose-graph.h>
@@ -62,8 +63,8 @@ int ReLocalizationEvaluationPlugin::evaluateReLocalizationForAllBenchmarkMission
     return common::kStupidUserError;
   }
 
-  // VIMapMerger merger(map.get(), getPlotterUnsafe());
-  // return merger.findLoopClosuresBetweenAllMissions();
+  //VIMapMerger merger(map.get(), getPlotterUnsafe());
+  //return merger.findLoopClosuresBetweenAllMissions();
   return common::kSuccess;
 }
 
