@@ -31,9 +31,9 @@ LoopClosurePlugin::LoopClosurePlugin(
       "Find loop closures in one mission.", common::Processing::Sync);
 
   addCommand(
-      {"dlc", "delete_loopclosure_edges"},
-      [this]() -> int { return deleteAllLoopClosureEdges(); },
-      "Delete loop closure edges of all missions.", common::Processing::Sync);
+      {"lcof", "loopclosure_between_first_and_other_missions"},
+      [this]() -> int { return findLoopClosuresBetweenFirstAndOtherMissions(); },
+      "Find loop closures between the first and all other missions.", common::Processing::Sync);
 
   addCommand(
       {"train_projection_matrix"},
@@ -116,6 +116,25 @@ int LoopClosurePlugin::findLoopClosuresInOneMission() const {
 
   VIMapMerger merger(map.get(), getPlotterUnsafe());
   return merger.findLoopClosuresBetweenMissions(mission_ids);
+}
+
+int LoopClosurePlugin::findLoopClosuresBetweenFirstAndOtherMissions() const {
+  std::string selected_map_key;
+  if (!getSelectedMapKeyIfSet(&selected_map_key)) {
+    return common::kStupidUserError;
+  }
+  vi_map::VIMapManager map_manager;
+  vi_map::VIMapManager::MapWriteAccess map =
+      map_manager.getMapWriteAccess(selected_map_key);
+
+  if (!areQualitiesOfAllLandmarksSet(*map)) {
+    LOG(ERROR) << "Some landmarks are of unknown quality. Update them with the "
+               << "elq command.";
+    return common::kStupidUserError;
+  }
+
+  VIMapMerger merger(map.get(), getPlotterUnsafe());
+  return merger.findLoopClosuresBetweenFirstAndOtherMissions();
 }
 
 int LoopClosurePlugin::deleteAllLoopClosureEdges() const {

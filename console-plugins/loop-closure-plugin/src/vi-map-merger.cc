@@ -34,6 +34,18 @@ int VIMapMerger::findLoopClosuresBetweenAllMissions() {
   return findLoopClosuresBetweenMissions(mission_ids);
 }
 
+int VIMapMerger::findLoopClosuresBetweenFirstAndOtherMissions() {
+  if (map_->numMissions() == 0u) {
+    LOG(ERROR) << "No missions in database.";
+    return kNoData;
+  }
+
+  vi_map::MissionIdList mission_ids;
+  map_->getAllMissionIds(&mission_ids);
+
+  return findLoopClosuresBetweenFirstAndOtherMissions(mission_ids);
+}
+
 int VIMapMerger::findLoopClosuresBetweenMissions(
     const vi_map::MissionIdList& mission_ids) {
   VLOG(1) << "Trying to find loop-closures in and between "
@@ -82,7 +94,6 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
       if (plotter_ != nullptr) {
         loop_detector.instantiateVisualizer();
       }
-      loop_detector.addMissionToDatabase(*it, *map_);
       for (vi_map::MissionIdList::const_iterator jt = mission_ids.begin();
            jt != mission_ids.end(); ++jt) {
         if (FLAGS_lc_only_against_other_missions && *jt == *it) {
@@ -93,6 +104,52 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
       }
     }
   }
+
+  return common::kSuccess;
+}
+
+int VIMapMerger::findLoopClosuresBetweenFirstAndOtherMissions(
+    const vi_map::MissionIdList& mission_ids) {
+  VLOG(1) << "Trying to find loop-closures in and between "
+          << mission_ids.size() << " missions.";
+
+  if (mission_ids.empty()) {
+    LOG(ERROR) << "There are no missions in the loaded map. Aborting.";
+    return common::kUnknownError;
+  }
+
+  VLOG(1) << "Loop closing between first against other missions" << std::endl;
+  // TODO: (ehosko) Outer loop not needed - only loop against first map
+  vi_map::MissionIdList::const_iterator it = mission_ids.begin();
+  CHECK(it->isValid());
+  loop_detector_node::LoopDetectorNode loop_detector;
+  if (plotter_ != nullptr) {
+    loop_detector.instantiateVisualizer();
+  }
+  loop_detector.addMissionToDatabase(*it, *map_);
+  loop_detector.outputFile = "/home/michbaum/Projects/maplab/data/loopclosure/test3.csv";
+  // Create and open csv file for output
+  std::ofstream outputStream;
+  //std::string driftlogfile_ = "/home/michbaum/Projects/maplab/data/loopclosure/test2.csv";
+  outputStream.open(loop_detector.outputFile.c_str());
+  if (!outputStream.is_open())
+  {
+    LOG(INFO) << "Failed to open log file";
+  }
+  else
+  {
+    outputStream << "ratio\n";
+    outputStream.close();
+  }
+  for (vi_map::MissionIdList::const_iterator jt = mission_ids.begin() + 1;
+        jt != mission_ids.end(); ++jt) {
+    if (FLAGS_lc_only_against_other_missions && *jt == *it) {
+      continue;
+    }
+    // TODO: (michbaum) might need to not merge landmarks for the eval pipeline
+    loop_detector.detectLoopClosuresAndMergeLandmarks(*jt, map_);
+  }
+
 
   return common::kSuccess;
 }

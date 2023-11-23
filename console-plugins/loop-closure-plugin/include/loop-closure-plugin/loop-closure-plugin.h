@@ -26,6 +26,7 @@ class LoopClosurePlugin : public common::ConsolePluginBaseWithPlotter {
  private:
   int findLoopClosuresBetweenAllMissions() const;
   int findLoopClosuresInOneMission() const;
+  int findLoopClosuresBetweenFirstAndOtherMissions() const;
   int deleteAllLoopClosureEdges() const;
   int serializeLoopDetector() const;
   // (michbaum) These were probably intended at one point but not implemented.

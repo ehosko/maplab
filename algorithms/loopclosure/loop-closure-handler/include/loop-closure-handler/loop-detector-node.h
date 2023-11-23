@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <fstream>
+#include <iostream>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -86,6 +88,7 @@ class LoopDetectorNode final {
   void clear();
 
   std::string printStatus() const;
+  std::string outputFile;
 
  private:
   typedef std::vector<size_t> SupsampledToFullIndexMap;

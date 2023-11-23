@@ -23,6 +23,8 @@
 #include <sstream>  // NOLINT
 #include <string>
 #include <vi-map/landmark-quality-metrics.h>
+#include <fstream>
+#include <iostream>
 
 #include "loop-closure-handler/loop-closure-handler.h"
 #include "loop-closure-handler/visualization/loop-closure-visualizer.h"
@@ -901,6 +903,25 @@ bool LoopDetectorNode::detectLoopClosuresVerticesToDatabase(
   }
 
   // TODO: (ehosko) Write to csv file
+  // only write if exists -> is defined
+  if(!outputFile.empty()){
+    std::ofstream outputStream;
+    //std::string driftlogfile_ = "/home/michbaum/Projects/maplab/data/loopclosure/test2.csv";
+    outputStream.open(outputFile.c_str(),std::ios::app);
+    if (!outputStream.is_open())
+    {
+      LOG(INFO) << "Failed to open log file";
+      //ros::shutdown();
+    }
+    else
+    {
+      LOG(INFO) << "HERE";
+      outputStream << (double)inlier_counts.size()/(double)vertices.size() << std::endl;
+      outputStream.flush();
+      outputStream.close();
+    }
+  }
+
   std::stringstream result_ss;
   result_ss << "\nLoop closure result:";
   result_ss << "\n - missions in database: " << ss.str();
