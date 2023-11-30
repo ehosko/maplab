@@ -19,7 +19,7 @@
 
 			<!-- ROVIOLI CONFIG -->
 			<param name="rovioli_run_map_builder" value="false"/>
-			<param name="rovio_enable_frame_visualization" value="false"/>
+			<param name="rovio_enable_frame_visualization" value="true"/>
 			<param name="rovioli_enable_health_checking" value="false"/>
 
 			<remap from="/rovioli/maplab_odom_T_M_I" to="/odometry/maplab_odom_T_M_I"/>

@@ -897,29 +897,27 @@ bool LoopDetectorNode::detectLoopClosuresVerticesToDatabase(
     visualizer_->visualizeFullMapDatabase(missions, *map);
   }
 
+  std::ofstream outputStream;
+  if(!outputFile.empty()){
+    outputStream.open(outputFile.c_str(),std::ios::app);
+  }
+
   if (inlier_counts.empty()) {
+    if (outputStream.is_open())
+    {
+      outputStream << 0 << std::endl;
+      outputStream.flush();
+      outputStream.close();
+    }
     LOG(INFO) << "\nLoop closure result: \n - No loops found!";
     return false;
   }
 
-  // TODO: (ehosko) Write to csv file
-  // only write if exists -> is defined
-  if(!outputFile.empty()){
-    std::ofstream outputStream;
-    //std::string driftlogfile_ = "/home/michbaum/Projects/maplab/data/loopclosure/test2.csv";
-    outputStream.open(outputFile.c_str(),std::ios::app);
-    if (!outputStream.is_open())
-    {
-      LOG(INFO) << "Failed to open log file";
-      //ros::shutdown();
-    }
-    else
-    {
-      LOG(INFO) << "HERE";
-      outputStream << (double)inlier_counts.size()/(double)vertices.size() << std::endl;
-      outputStream.flush();
-      outputStream.close();
-    }
+  if (outputStream.is_open())
+  {
+    outputStream << (double)inlier_counts.size()/(double)vertices.size() << std::endl;
+    outputStream.flush();
+    outputStream.close();
   }
 
   std::stringstream result_ss;
