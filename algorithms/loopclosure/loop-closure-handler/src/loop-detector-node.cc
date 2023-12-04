@@ -27,6 +27,9 @@
 #include "loop-closure-handler/loop-closure-handler.h"
 #include "loop-closure-handler/visualization/loop-closure-visualizer.h"
 
+#include <iostream>
+#include <fstream>
+
 DEFINE_bool(
     lc_filter_underconstrained_landmarks, false,
     "If observations from underconstrained landmarks should be filtered from "
@@ -665,8 +668,7 @@ bool LoopDetectorNode::computeAbsoluteTransformFromFrameMatches(
   return ransac_ok;
 }
 
-// TODO: (michbaum) This is the function that actually gets the vertex poses, \
-if we want to build something ourselves, we would need this
+
 void LoopDetectorNode::queryVertexInDatabase(
     const pose_graph::VertexId& query_vertex_id, const bool merge_landmarks,
     const bool add_lc_edges, vi_map::VIMap* map,
@@ -700,6 +702,9 @@ void LoopDetectorNode::queryVertexInDatabase(
       if (!frame.hasDescriptorType(feature_type_) ||
           frame.getNumKeypointMeasurementsOfType(feature_type_) == 0u) {
         // Skip frame if zero measurements found.
+        VLOG(1) << "Frame " << frame_idx << " of vertex " << query_vertex_id
+                << " has no descriptors of type " << feature_type_
+                << " or no measurements.";
         continue;
       }
 
@@ -757,6 +762,9 @@ void LoopDetectorNode::queryVertexInDatabase(
 
     if (ransac_ok) {
       // TODO: (michbaum) Found a loop closure/re-localization of the vertex -> Save it!
+      VLOG(1) << "Found a re-localization for vertex "
+              << query_vertex_id << " with " << num_inliers << " inliers.";
+      VLOG(1) << "Saving map pose and number of inliers.";
       map_mutex->lock();
       const pose::Transformation& T_M_I = query_vertex.get_T_M_I();
       const pose::Transformation T_G_M2 = T_G_I_ransac * T_M_I.inverse();
@@ -770,6 +778,123 @@ void LoopDetectorNode::queryVertexInDatabase(
     }
   }
 }
+// TODO: (michbaum) New function based on queryVertexInDatabase
+void LoopDetectorNode::locateVertexInDatabase(
+    const pose_graph::VertexId& query_vertex_id, const bool merge_landmarks,
+    const bool add_lc_edges, vi_map::VIMap* map,
+    vi_map::LoopClosureConstraint* raw_constraint,
+    vi_map::LoopClosureConstraint* inlier_constraint,
+    std::vector<double>* inlier_counts,
+    aslam::TransformationVector* T_G_M2_vector,
+    loop_closure_handler::LoopClosureHandler::MergedLandmark3dPositionVector*
+        landmark_pairs_merged,
+    std::mutex* map_mutex,
+    std::unordered_map<pose_graph::VertexId, aslam::Transformation>*
+              transform_dict) const {
+  CHECK_NOTNULL(map);
+  CHECK_NOTNULL(raw_constraint);
+  CHECK_NOTNULL(inlier_constraint);
+  CHECK_NOTNULL(inlier_counts);
+  CHECK_NOTNULL(T_G_M2_vector);
+  CHECK_NOTNULL(landmark_pairs_merged);
+  CHECK_NOTNULL(map_mutex);
+  CHECK_NOTNULL(transform_dict); // TODO: (michbaum) Might not need this
+  CHECK(query_vertex_id.isValid());
+
+  map_mutex->lock();
+  const vi_map::Vertex& query_vertex = map->getVertex(query_vertex_id);
+  const size_t num_frames = query_vertex.numFrames();
+  loop_closure::ProjectedImagePtrList projected_image_ptr_list;
+  projected_image_ptr_list.reserve(num_frames);
+
+  for (size_t frame_idx = 0u; frame_idx < num_frames; ++frame_idx) {
+    if (query_vertex.isVisualFrameSet(frame_idx) &&
+        query_vertex.isVisualFrameValid(frame_idx)) {
+      const aslam::VisualFrame& frame = query_vertex.getVisualFrame(frame_idx);
+      CHECK(frame.hasKeypointMeasurements());
+      if (!frame.hasDescriptorType(feature_type_) ||
+          frame.getNumKeypointMeasurementsOfType(feature_type_) == 0u) {
+        // Skip frame if zero measurements found.
+        VLOG(1) << "Frame " << frame_idx << " of vertex " << query_vertex_id
+                << " has no descriptors of type " << feature_type_
+                << " or no measurements.";
+        continue;
+      }
+
+      std::vector<vi_map::LandmarkId> landmark_ids;
+      query_vertex.getFrameObservedLandmarkIdsOfType(
+          frame_idx, &landmark_ids, feature_type_);
+
+      projected_image_ptr_list.push_back(
+          std::make_shared<loop_closure::ProjectedImage>());
+      const vi_map::VisualFrameIdentifier query_frame_id(
+          query_vertex_id, frame_idx);
+      convertFrameToProjectedImage(
+          *map, query_frame_id, query_vertex.getVisualFrame(frame_idx),
+          landmark_ids, query_vertex.getMissionId(),
+          FLAGS_lc_filter_underconstrained_landmarks,
+          projected_image_ptr_list.back().get());
+    }
+  }
+  map_mutex->unlock();
+
+  loop_closure::FrameToMatches frame_matches;
+  // Do not parallelize if the current function is running in multiple
+  // threads to avoid decrease in performance.
+  constexpr bool kParallelFindIfPossible = false;
+  loop_detector_->Find(
+      projected_image_ptr_list, kParallelFindIfPossible, &frame_matches);
+
+  if (!frame_matches.empty()) {
+    for (const loop_closure::FrameIdMatchesPair& id_and_matches :
+         frame_matches) {
+      vi_map::LoopClosureConstraint tmp_constraint;
+      const bool conversion_success =
+          convertFrameMatchesToConstraint(id_and_matches, &tmp_constraint);
+      if (!conversion_success) {
+        continue;
+      }
+      raw_constraint->query_vertex_id = tmp_constraint.query_vertex_id;
+      raw_constraint->structure_matches.insert(
+          raw_constraint->structure_matches.end(),
+          tmp_constraint.structure_matches.begin(),
+          tmp_constraint.structure_matches.end());
+    }
+
+    int num_inliers = 0;
+    double inlier_ratio = 0.0;
+
+    // The estimated transformation of this vertex to the map.
+    pose::Transformation T_G_I_ransac;
+    constexpr pose_graph::VertexId* kVertexIdClosestToStructureMatches =
+        nullptr;
+    bool ransac_ok = handleLoopClosures(
+        *raw_constraint, merge_landmarks, add_lc_edges, &num_inliers,
+        &inlier_ratio, map, &T_G_I_ransac, inlier_constraint,
+        landmark_pairs_merged, kVertexIdClosestToStructureMatches, map_mutex);
+
+    if (ransac_ok) {
+      // TODO: (michbaum) Found a loop closure/re-localization of the vertex -> Save it!
+      VLOG(1) << "Found a re-localization for vertex "
+              << query_vertex_id << " with " << num_inliers << " inliers.";
+      VLOG(1) << "Saving map pose and number of inliers.";
+      map_mutex->lock();
+      const pose::Transformation& T_M_I = query_vertex.get_T_M_I();
+      const pose::Transformation T_G_M2 = T_G_I_ransac * T_M_I.inverse();
+      map_mutex->unlock();
+
+      // TODO: (michbaum) Dump the loop closure/re-localization to a csv file 
+      //                  Or already evaluate ground truth error? 
+      //                  -> Would need to pipe ground truth in here
+      T_G_M2_vector->push_back(T_G_M2);
+      inlier_counts->push_back(num_inliers);
+      // TODO: (michbaum) Check that this works
+      VLOG(1) << "Saving map pose and query vertex id.";
+      transform_dict->emplace(query_vertex_id, T_G_M2);
+    }
+  }
+}
+
 
 bool LoopDetectorNode::detectLoopClosuresMissionToDatabase(
     const MissionId& mission_id, const bool merge_landmarks,
@@ -780,7 +905,7 @@ bool LoopDetectorNode::detectLoopClosuresMissionToDatabase(
   pose_graph::VertexIdList vertices;
   map->getAllVertexIdsInMission(mission_id, &vertices);
 
-  // Shuffle vertex order to more uniformly distribute CPU load
+  // Shuffle vertex order to more uniformly distribute CPU load 
   std::random_device device;
   std::mt19937 generator(device());
   std::shuffle(vertices.begin(), vertices.end(), generator);
@@ -789,6 +914,48 @@ bool LoopDetectorNode::detectLoopClosuresMissionToDatabase(
       vertices, merge_landmarks, add_lc_edges, map, T_G_M_estimate,
       inlier_constraints);
 }
+
+// (michbaum) New function to propagate selected_map_key
+bool LoopDetectorNode::detectLocalizationMissionToDatabase(
+    const MissionId& mission_id, const bool merge_landmarks,
+    const bool add_lc_edges, vi_map::VIMap* map,
+    pose::Transformation* T_G_M_estimate,
+    vi_map::LoopClosureConstraintVector* inlier_constraints,
+    const std::string selected_map_key) const {
+  CHECK(map->hasMission(mission_id));
+  pose_graph::VertexIdList vertices;
+  map->getAllVertexIdsInMission(mission_id, &vertices);
+
+  // VLOG(1) << "Vertex IDs prior to shuffling: ";
+  // for (const pose_graph::VertexId& vertex_id : vertices) {
+  //   VLOG(1) << vertex_id;
+  // }
+
+  // Shuffle vertex order to more uniformly distribute CPU load
+  // TODO: (michbaum) make a deep copy the original vertex list to keep the ordering for later
+  pose_graph::VertexIdList vertices_copy = vertices;  
+  std::random_device device;
+  std::mt19937 generator(device());
+  std::shuffle(vertices.begin(), vertices.end(), generator);
+
+  // Check that the two lists are not the same
+  CHECK(vertices != vertices_copy);
+
+  // VLOG(1) << "Vertex IDs after shuffling: ";
+  // for (const pose_graph::VertexId& vertex_id : vertices) {
+  //   VLOG(1) << vertex_id;
+  // }
+
+  // VLOG(1) << "Copied Vertex IDs after shuffling: ";
+  // for (const pose_graph::VertexId& vertex_id : vertices_copy) {
+  //   VLOG(1) << vertex_id;
+  // }
+
+  return detectLocalizationVerticesToDatabase(
+      vertices, merge_landmarks, add_lc_edges, map, T_G_M_estimate,
+      inlier_constraints, vertices_copy, selected_map_key, mission_id);
+}
+
 
 bool LoopDetectorNode::detectLoopClosuresVerticesToDatabase(
     const pose_graph::VertexIdList& vertices, const bool merge_landmarks,
@@ -967,6 +1134,243 @@ bool LoopDetectorNode::detectLoopClosuresVerticesToDatabase(
 
   return true;
 }
+
+bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
+    const pose_graph::VertexIdList& vertices, const bool merge_landmarks,
+    const bool add_lc_edges, vi_map::VIMap* map,
+    pose::Transformation* T_G_M_estimate,
+    vi_map::LoopClosureConstraintVector* inlier_constraints, 
+    const pose_graph::VertexIdList& vertices_original,
+    const std::string selected_map_key,
+    const MissionId& mission_id) const {
+  CHECK(!vertices.empty());
+  CHECK_NOTNULL(map);
+  CHECK_NOTNULL(T_G_M_estimate)->setIdentity();
+  CHECK_NOTNULL(inlier_constraints)->clear();
+
+  std::ostringstream ss;
+  for (const MissionId mission : missions_in_database_) {
+    ss << mission << ", ";
+  }
+
+  VLOG(1) << "Searching for re-localizations in missions " << ss.str();
+
+  // Initialize the search index if needed.
+  loop_detector_->Initialize();
+
+  // Then search for all in the database.
+  std::vector<double> inlier_counts;
+  aslam::TransformationVector T_G_M_vector;
+
+  std::mutex map_mutex;
+  std::mutex output_mutex;
+
+  loop_closure_handler::LoopClosureHandler::MergedLandmark3dPositionVector
+      landmark_pairs_merged;
+  vi_map::LoopClosureConstraintVector raw_constraints;
+
+  std::unordered_map<pose_graph::VertexId, aslam::Transformation>
+              transform_dict;
+
+  common::MultiThreadedProgressBar progress_bar(1);
+  std::function<void(const std::vector<size_t>&)> query_helper =
+      [&](const std::vector<size_t>& range) {
+        int num_processed = 0;
+        progress_bar.setNumElements(range.size());
+        for (const size_t job_index : range) {
+          const pose_graph::VertexId& query_vertex_id = vertices[job_index];
+          progress_bar.update(++num_processed);
+
+          // Allocate local buffers to avoid locking.
+          vi_map::LoopClosureConstraint raw_constraint_local;
+          vi_map::LoopClosureConstraint inlier_constraint_local;
+          using loop_closure_handler::LoopClosureHandler;
+          LoopClosureHandler::MergedLandmark3dPositionVector
+              landmark_pairs_merged_local;
+          std::vector<double> inlier_counts_local;
+          aslam::TransformationVector T_G_M2_vector_local;
+
+          // (michbaum) Define a lokal transform dict to save the query_vertex_id
+          //            and the estimated map to imu transformation
+          std::unordered_map<pose_graph::VertexId, aslam::Transformation>
+              transform_dict_local;
+
+          // Perform the actual query.
+          locateVertexInDatabase(
+              query_vertex_id, merge_landmarks, add_lc_edges, map,
+              &raw_constraint_local, &inlier_constraint_local,
+              &inlier_counts_local, &T_G_M2_vector_local,
+              &landmark_pairs_merged_local, &map_mutex, &transform_dict_local);
+
+          VLOG(1) << "Transform dict local size: " << transform_dict_local.size();
+          // Lock the output buffers and transfer results.
+          {
+            std::unique_lock<std::mutex> lock_output(output_mutex);
+            if (raw_constraint_local.query_vertex_id.isValid()) {
+              raw_constraints.push_back(raw_constraint_local);
+            }
+            if (inlier_constraint_local.query_vertex_id.isValid()) {
+              inlier_constraints->push_back(inlier_constraint_local);
+            }
+
+            landmark_pairs_merged.insert(
+                landmark_pairs_merged.end(),
+                landmark_pairs_merged_local.begin(),
+                landmark_pairs_merged_local.end());
+            inlier_counts.insert(
+                inlier_counts.end(), inlier_counts_local.begin(),
+                inlier_counts_local.end());
+            T_G_M_vector.insert(
+                T_G_M_vector.end(), T_G_M2_vector_local.begin(),
+                T_G_M2_vector_local.end());
+            
+            VLOG(1) << "Transform dict local size: " << transform_dict_local.size();
+            // (michbaum) Insert the local transform dict into the global one
+            transform_dict.insert(
+                transform_dict_local.begin(),
+                transform_dict_local.end());
+          }
+        }
+      };
+
+  constexpr bool kAlwaysParallelize = true;
+  const size_t num_threads = common::getNumHardwareThreads();
+
+  timing::Timer timing_mission_lc("lc query mission");
+  common::ParallelProcess(
+      vertices.size(), query_helper, kAlwaysParallelize, num_threads);
+  timing_mission_lc.Stop();
+
+  VLOG(1) << "Searched " << vertices.size() << " frames.";
+
+
+
+  // (michbaum) Check that we got the right number of vertices in the transform dict
+  //            that should be inlier_count.size()
+  VLOG(1) << "Transform dict size: " << transform_dict.size() << "\n"
+          << "Vertices size: " << vertices.size() << "\n"
+          << "Inlier counts size: " << inlier_counts.size();
+  CHECK_EQ(transform_dict.size(), inlier_counts.size());
+
+  
+  // Use the selected map key to name the file
+  // std::string filename = "/home/optag_ws/data/vi_map_evaluation/" + selected_map_key + ".csv";
+  std::string filename = selected_map_key + ".csv";
+  // (michbaum) Now open a csv file and write the vertices - in the original order given in vertices_original - 
+  //            and the estimated map to imu transformation into it if in the dict. Otherwise leave the transform empty.
+  std::ofstream myfile(filename, std::ios_base::app);
+  if (!myfile.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return 1; // Return an error code
+  }
+  int vertex_number = 0;
+  for (const pose_graph::VertexId& vertex_id : vertices_original) {
+    // Check if the vertex_id is in the transform_dict
+    if (transform_dict.find(vertex_id) != transform_dict.end()) {
+      // Extract the position from the transformation
+      Eigen::Vector3d position = transform_dict[vertex_id].getPosition();
+      // Eigen::Matrix<double, 3, 1> position = transform_dict[vertex_id].getPosition();
+      // Write the vertex_id and the estimated map to imu position into the csv file
+      myfile << mission_id << "," << vertex_id << "," << vertex_number << "," << position.x() << "," << position.y() << "," << position.z() << "\n";
+    } else {
+      // Write the vertex_id and an empty transformation into the csv file
+      myfile << mission_id << "," << vertex_id << "," << vertex_number << "," <<  ","  << "," <<  "\n";
+    }
+    vertex_number++;
+  }
+  myfile.close();
+  VLOG(1) << "Data written to " << filename;
+
+
+
+  // If the plotter object was assigned.
+  if (visualizer_) {
+    vi_map::MissionIdList missions(
+        missions_in_database_.begin(), missions_in_database_.end());
+    vi_map::MissionIdSet query_mission_set;
+    map->getMissionIds(vertices, &query_mission_set);
+    missions.insert(
+        missions.end(), query_mission_set.begin(), query_mission_set.end());
+
+    visualizer_->visualizeKeyframeToStructureMatches(
+        *inlier_constraints, raw_constraints, landmark_id_old_to_new_, *map);
+    visualizer_->visualizeMergedLandmarks(landmark_pairs_merged);
+    visualizer_->visualizeFullMapDatabase(missions, *map);
+  }
+
+  if (inlier_counts.empty()) {
+    LOG(INFO) << "\nLoop closure result: \n - No loops found!";
+    return false;
+  }
+
+  std::stringstream result_ss;
+  result_ss << "\nLoop closure result:";
+  result_ss << "\n - missions in database: " << ss.str();
+  result_ss << "\n - localized " << inlier_counts.size() << "/"
+            << vertices.size() << " vertices";
+
+  if (VLOG_IS_ON(2)) {
+    result_ss << "\n - Inlier counts: ";
+    for (double val : inlier_counts) {
+      result_ss << val << ", ";
+    }
+  }
+
+  if (merge_landmarks) {
+    result_ss << "\n - Merged " << landmark_pairs_merged.size()
+              << " landmark pairs";
+  }
+  LOG(INFO) << result_ss.str();
+
+  // Check flags.
+  CHECK_GE(FLAGS_anchor_transform_min_inlier_count, 0);
+  CHECK_GE(FLAGS_anchor_transform_min_inlier_ratio, 0.0);
+  CHECK_GE(FLAGS_anchor_transform_ransac_num_interations, 0);
+  CHECK_GE(FLAGS_anchor_transform_ransac_max_orientation_error_rad, 0.0);
+  CHECK_GE(FLAGS_anchor_transform_ransac_max_position_error_m, 0.0);
+
+  // RANSAC and LSQ estimate of the mission baseframe transformation.
+  aslam::Transformation T_G_M_LS;
+  int num_inliers = 0;
+  std::random_device device;
+  const int ransac_seed = device();
+
+  common::transformationRansac(
+      T_G_M_vector, FLAGS_anchor_transform_ransac_num_interations,
+      FLAGS_anchor_transform_ransac_max_orientation_error_rad,
+      FLAGS_anchor_transform_ransac_max_position_error_m, ransac_seed,
+      &T_G_M_LS, &num_inliers);
+  VLOG(1) << "RANSAC found " << num_inliers << " inliers out of "
+          << T_G_M_vector.size();
+
+  const int kNumInliersThreshold = std::max(
+      FLAGS_anchor_transform_min_inlier_count,
+      static_cast<int>(
+          T_G_M_vector.size() * FLAGS_anchor_transform_min_inlier_ratio));
+  if (num_inliers < kNumInliersThreshold) {
+    LOG(INFO) << "Not enough inliers to compute T_G_M! (threshold: "
+              << kNumInliersThreshold << ")";
+    return false;
+  }
+  const Eigen::Quaterniond& q_G_M_LS =
+      T_G_M_LS.getRotation().toImplementation();
+
+  // The datasets should be gravity-aligned so only yaw-axis rotation is
+  // necessary to prealign them.
+  Eigen::Vector3d rpy_G_M_LS =
+      common::RotationMatrixToRollPitchYaw(q_G_M_LS.toRotationMatrix());
+  rpy_G_M_LS(0) = 0.0;
+  rpy_G_M_LS(1) = 0.0;
+  Eigen::Quaterniond q_G_M_LS_yaw_only(
+      common::RollPitchYawToRotationMatrix(rpy_G_M_LS));
+
+  T_G_M_LS.getRotation().toImplementation() = q_G_M_LS_yaw_only;
+  *T_G_M_estimate = T_G_M_LS;
+  VLOG(3) << "T_G_M based on inlier set: \n" << *T_G_M_estimate;
+
+  return true;
+}
+
 
 void LoopDetectorNode::detectLoopClosuresAndMergeLandmarks(
     const MissionId& mission, vi_map::VIMap* map) {
