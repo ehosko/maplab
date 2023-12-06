@@ -42,6 +42,9 @@
 		<!-- MAPLAB_NODE_CONFIG -->
 		<param name="map_save_every_n_sec" value="0"/>
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/> -->
-		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/>
+		<!-- Workstation -->
+		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse_query_maps_without_windows_corrected/warehouse"/> -->
+		<!-- Laptop -->
+		<param name="map_output_folder" value="/home/michbaum/maplab_ws/data/vimaps/warehouse/warehouse_query_maps_without_windows_corrected/warehouse"/>
 	</node>
 </launch>

@@ -77,11 +77,27 @@ class LoopDetectorNode final {
       pose::Transformation* T_G_M_estimate,
       vi_map::LoopClosureConstraintVector* inlier_constraints) const;
 
+  bool detectLocalizationMissionToDatabase(
+    const MissionId& mission_id, const bool merge_landmarks,
+    const bool add_lc_edges, vi_map::VIMap* map,
+    pose::Transformation* T_G_M_estimate,
+    vi_map::LoopClosureConstraintVector* inlier_constraints,
+    const std::string selected_map_key) const;
+
   bool detectLoopClosuresVerticesToDatabase(
       const pose_graph::VertexIdList& vertices, const bool merge_landmarks,
       const bool add_lc_edges, vi_map::VIMap* map,
       pose::Transformation* T_G_M_estimate,
       vi_map::LoopClosureConstraintVector* inlier_constraints) const;
+
+  bool detectLocalizationVerticesToDatabase(
+    const pose_graph::VertexIdList& vertices, const bool merge_landmarks,
+    const bool add_lc_edges, vi_map::VIMap* map,
+    pose::Transformation* T_G_M_estimate,
+    vi_map::LoopClosureConstraintVector* inlier_constraints, 
+    const pose_graph::VertexIdList& vertices_original,
+    const std::string selected_map_key,
+    const MissionId& mission_id) const;
 
   void instantiateVisualizer();
 
@@ -168,6 +184,19 @@ class LoopDetectorNode final {
       loop_closure_handler::LoopClosureHandler::MergedLandmark3dPositionVector*
           landmark_pairs_merged,
       std::mutex* map_mutex) const;
+
+  void locateVertexInDatabase(
+    const pose_graph::VertexId& query_vertex_id, const bool merge_landmarks,
+    const bool add_lc_edges, vi_map::VIMap* map,
+    vi_map::LoopClosureConstraint* raw_constraint,
+    vi_map::LoopClosureConstraint* inlier_constraint,
+    std::vector<double>* inlier_counts,
+    aslam::TransformationVector* T_G_M2_vector,
+    loop_closure_handler::LoopClosureHandler::MergedLandmark3dPositionVector*
+        landmark_pairs_merged,
+    std::mutex* map_mutex,
+    std::unordered_map<pose_graph::VertexId, aslam::Transformation>*
+              transform_dict) const;
 
   loop_closure_visualization::LoopClosureVisualizer::UniquePtr visualizer_;
   std::shared_ptr<matching_based_loopclosure::LoopDetector> loop_detector_;
