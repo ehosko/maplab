@@ -14,7 +14,7 @@
 			<!-- SENSORS -->
 			<param name="sensor_calibration_file" value="$(find maplab_node)/launch/optag/calib/optag.yaml"/>
 			<param name="imu_to_camera_time_offset_ns" value="0"/>
-			<!-- Make sure that the suffix of all the camera topics to be used matches this here -->
+			<!-- Make sure that the suf1fix of all the camera topics to be used matches this here -->
 			<param name="vio_camera_topic_suffix" value="isaac_gray_image_out"/>
 
 			<!-- ROVIOLI CONFIG -->
