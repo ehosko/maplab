@@ -113,6 +113,9 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
   const bool kAddLoopClosureEdges = true;
   const bool kMergeLandmarks = false;
 
+  // Temp threshold parameter
+  double thresh = 1.0;
+
   // We only want to localize all benchmark submaps w.r.t. the main map
   
   loop_detector_node::LoopDetectorNode loop_detector;
@@ -129,6 +132,9 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
 
     std::vector<vi_map::Edge::UniquePtr> loop_closure_edges;
 
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond>> evaluate_mission_vertices;
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond>> sample_mission_vertices;
+
     // loop_detector.detectLoopClosuresAndMergeLandmarks(*jt, map_);
     VLOG(1) << "Localizing mission " << *jt << " w.r.t. mission " << evaluate_mission_id << ".";
     loop_detector.detectLocalizationMissionToDatabase(
@@ -137,7 +143,6 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
 
     int num_loop_closure_edges = loop_closure_edges.size();
     VLOG(1) << "Number of loop closure edges: " << loop_closure_edges.size();
-
 
     // TODO (ehosko) : need to add aam computation here to get more results for transformation matrix (or reset threshold if possible)
     VLOG(1) << "Transformation Matrix: " << T_G_M2;
@@ -168,14 +173,31 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
       VLOG(1) << "P2 transformed : " << p2_I1.x() << " " << p2_I1.y() << " " << p2_I1.z();
       
       // Compute distance of loop closure edge and remove if above threshold
+      double eucl_distance = std::sqrt(std::pow(p1_position.x() - p2_I1.x(), 2) + std::pow(p1_position.y() - p2_I1.y(), 2) + std::pow(p1_position.z() - p2_I1.z(), 2));
+      if(eucl_distance > thresh)
+      {
+          VLOG(1) << "Removing loop closure edge with distance: " << eucl_distance;
+          loop_closure_edges.erase(loop_closure_edges.begin() + i);
 
-      // Align trajectories with rpg_trajectory_evaluation
+          // Move back one step in the loop to not skip the next edge
+          --i;
+          --num_loop_closure_edges;
+      }
+      else
+      {
+        // Add the vertices to the list of vertices
+        evaluate_mission_vertices.push_back(std::make_pair(p1_position, vertex_1.get_q_M_I()));
+        sample_mission_vertices.push_back(std::make_pair(p2_I1, q2_I1));
+      }
     }
 
-    // List of loop closure edges between the two missions (as edge)
+    // Align trajectories with rpg_trajectory_evaluation with remaining edges
+    // Create list/vector of poses for the two missions as input for the alignment
 
-    
-}
+    // Compare new poses with ground truth poses
+
+    // Write results to csv file
+  }
 
 
   return common::kSuccess;
