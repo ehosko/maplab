@@ -82,7 +82,8 @@ class LoopDetectorNode final {
     const bool add_lc_edges, vi_map::VIMap* map,
     pose::Transformation* T_G_M_estimate,
     vi_map::LoopClosureConstraintVector* inlier_constraints,
-    const std::string selected_map_key) const;
+    const std::string selected_map_key,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) const;
 
   bool detectLoopClosuresVerticesToDatabase(
       const pose_graph::VertexIdList& vertices, const bool merge_landmarks,
@@ -97,7 +98,8 @@ class LoopDetectorNode final {
     vi_map::LoopClosureConstraintVector* inlier_constraints, 
     const pose_graph::VertexIdList& vertices_original,
     const std::string selected_map_key,
-    const MissionId& mission_id) const;
+    const MissionId& mission_id,
+    std::vector<vi_map::Edge::UniquePtr>*) const;
 
   void instantiateVisualizer();
 
@@ -151,7 +153,8 @@ class LoopDetectorNode final {
       loop_closure_handler::LoopClosureHandler::MergedLandmark3dPositionVector*
           landmark_pairs_merged,
       pose_graph::VertexId* vertex_id_closest_to_structure_matches,
-      std::mutex* map_mutex) const;
+      std::mutex* map_mutex,
+      std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>) const;
 
   bool convertFrameMatchesToConstraint(
       const loop_closure::FrameIdMatchesPair& query_frame_id_and_matches,
@@ -196,7 +199,8 @@ class LoopDetectorNode final {
         landmark_pairs_merged,
     std::mutex* map_mutex,
     std::unordered_map<pose_graph::VertexId, aslam::Transformation>*
-              transform_dict) const;
+              transform_dict,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const;
 
   loop_closure_visualization::LoopClosureVisualizer::UniquePtr visualizer_;
   std::shared_ptr<matching_based_loopclosure::LoopDetector> loop_detector_;

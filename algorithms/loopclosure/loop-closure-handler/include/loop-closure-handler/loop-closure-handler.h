@@ -69,7 +69,8 @@ class LoopClosureHandler {
       vi_map::LoopClosureConstraint* inlier_constraints,
       MergedLandmark3dPositionVector* landmark_pairs_merged,
       pose_graph::VertexId* vertex_id_closest_to_structure_matches,
-      std::mutex* map_mutex, bool use_random_pnp_seed = true) const;
+      std::mutex* map_mutex, bool use_random_pnp_seed = true,
+      std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>) const;
 
   bool handleLoopClosure(
       const aslam::VisualNFrame& query_vertex_n_frame,
@@ -82,7 +83,8 @@ class LoopClosureHandler {
       vi_map::VertexKeyPointToStructureMatchList* inlier_structure_matches,
       MergedLandmark3dPositionVector* landmark_pairs_merged,
       pose_graph::VertexId* vertex_id_closest_to_structure_matches,
-      std::mutex* map_mutex, bool use_random_pnp_seed = true) const;
+      std::mutex* map_mutex, bool use_random_pnp_seed = true, 
+      std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>) const;
 
   void updateQueryKeyframeInvalidLandmarkAssociations(
       const std::vector<int>& inliers,

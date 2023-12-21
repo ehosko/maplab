@@ -792,7 +792,8 @@ void LoopDetectorNode::locateVertexInDatabase(
         landmark_pairs_merged,
     std::mutex* map_mutex,
     std::unordered_map<pose_graph::VertexId, aslam::Transformation>*
-              transform_dict) const {
+              transform_dict,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) const {
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(raw_constraint);
   CHECK_NOTNULL(inlier_constraint);
@@ -873,7 +874,7 @@ void LoopDetectorNode::locateVertexInDatabase(
     bool ransac_ok = handleLoopClosures(
         *raw_constraint, merge_landmarks, add_lc_edges, &num_inliers,
         &inlier_ratio, map, &T_G_I_ransac, inlier_constraint,
-        landmark_pairs_merged, kVertexIdClosestToStructureMatches, map_mutex);
+        landmark_pairs_merged, kVertexIdClosestToStructureMatches, map_mutex,loop_closure_edges);
 
     if (ransac_ok) {
       // TODO: (michbaum) Found a loop closure/re-localization of the vertex -> Save it!
@@ -923,7 +924,8 @@ bool LoopDetectorNode::detectLocalizationMissionToDatabase(
     const bool add_lc_edges, vi_map::VIMap* map,
     pose::Transformation* T_G_M_estimate,
     vi_map::LoopClosureConstraintVector* inlier_constraints,
-    const std::string selected_map_key) const {
+    const std::string selected_map_key,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
   CHECK(map->hasMission(mission_id));
   pose_graph::VertexIdList vertices;
   map->getAllVertexIdsInMission(mission_id, &vertices);
@@ -955,7 +957,7 @@ bool LoopDetectorNode::detectLocalizationMissionToDatabase(
 
   return detectLocalizationVerticesToDatabase(
       vertices, merge_landmarks, add_lc_edges, map, T_G_M_estimate,
-      inlier_constraints, vertices_copy, selected_map_key, mission_id);
+      inlier_constraints, vertices_copy, selected_map_key, mission_id,loop_closure_edges);
 }
 
 
@@ -1162,7 +1164,8 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
     vi_map::LoopClosureConstraintVector* inlier_constraints, 
     const pose_graph::VertexIdList& vertices_original,
     const std::string selected_map_key,
-    const MissionId& mission_id) const {
+    const MissionId& mission_id,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) const {
   CHECK(!vertices.empty());
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(T_G_M_estimate)->setIdentity();
@@ -1220,7 +1223,7 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
               query_vertex_id, merge_landmarks, add_lc_edges, map,
               &raw_constraint_local, &inlier_constraint_local,
               &inlier_counts_local, &T_G_M2_vector_local,
-              &landmark_pairs_merged_local, &map_mutex, &transform_dict_local);
+              &landmark_pairs_merged_local, &map_mutex, &transform_dict_local,loop_closure_edges);
 
           VLOG(1) << "Transform dict local size: " << transform_dict_local.size();
           // Lock the output buffers and transfer results.
@@ -1289,12 +1292,13 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
     if (transform_dict.find(vertex_id) != transform_dict.end()) {
       // Extract the position from the transformation
       Eigen::Vector3d position = transform_dict[vertex_id].getPosition();
+      Eigen::Vector3d pos_traj = (map->getVertex(vertex_id)).get_p_M_I();
       // Eigen::Matrix<double, 3, 1> position = transform_dict[vertex_id].getPosition();
       // Write the vertex_id and the estimated map to imu position into the csv file
-      myfile << mission_id << "," << vertex_id << "," << vertex_number << "," << position.x() << "," << position.y() << "," << position.z() << "\n";
+      myfile << mission_id << "," << vertex_id << "," << vertex_number << "," << position.x() << "," << position.y() << "," << position.z() <<   ","  << pos_traj.x() << "," << pos_traj.y() << "," << pos_traj.z() << "\n";
     } else {
       // Write the vertex_id and an empty transformation into the csv file
-      myfile << mission_id << "," << vertex_id << "," << vertex_number << "," <<  ","  << "," <<  "\n";
+      myfile << mission_id << "," << vertex_id << "," << vertex_number << "," <<  ","  << "," <<  "," <<  ","  << "," << "\n";
     }
     vertex_number++;
   }
@@ -1416,7 +1420,8 @@ bool LoopDetectorNode::handleLoopClosures(
     loop_closure_handler::LoopClosureHandler::MergedLandmark3dPositionVector*
         landmark_pairs_merged,
     pose_graph::VertexId* vertex_id_closest_to_structure_matches,
-    std::mutex* map_mutex) const {
+    std::mutex* map_mutex,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
   CHECK_NOTNULL(num_inliers);
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(T_G_I_ransac);
@@ -1431,7 +1436,7 @@ bool LoopDetectorNode::handleLoopClosures(
   return handler.handleLoopClosure(
       constraint, merge_landmarks, add_lc_edges, num_inliers, inlier_ratio,
       T_G_I_ransac, inlier_constraints, landmark_pairs_merged,
-      vertex_id_closest_to_structure_matches, map_mutex, use_random_pnp_seed_);
+      vertex_id_closest_to_structure_matches, map_mutex, use_random_pnp_seed_,loop_closure_edges);
 }
 
 void LoopDetectorNode::instantiateVisualizer() {

@@ -27,12 +27,17 @@ ReLocalizationEvaluationPlugin::ReLocalizationEvaluationPlugin(
   addCommand(
       {"rle", "re_localization_evaluation_all_query_missions"},
       [this]() -> int { return evaluateReLocalizationForAllBenchmarkMissions(); },
-      "Evaluate the re-localization accuracy between all query missions and the to be evaluated mission.", common::Processing::Sync);
+      "Evaluate the re-localization ability between all query missions and the to be evaluated mission.", common::Processing::Sync);
 
   addCommand(
       {"rleom", "re_localization_evaluation_one_query_mission"},
       [this]() -> int { return evaluateReLocalizationForOneBenchmarkMission(); },
-      "Evaluate the re-localization accuracy between one query missions and the to be evaluated mission.", common::Processing::Sync);
+      "Evaluate the re-localization ability between one query missions and the to be evaluated mission.", common::Processing::Sync);
+
+  addCommand(
+      {"rlae", "re_localization_quality_accuracy_all_query_missions"},
+      [this]() -> int { return evaluateReLocalizationAccuracyForAllBenchmarkMissions(); },
+      "Evaluate the re-localization accuracy between all query missions and the to be evaluated mission.", common::Processing::Sync);
 
 }
 
@@ -52,6 +57,7 @@ bool areQualitiesOfAllLandmarksSet(const vi_map::VIMap& map) {
 
 int ReLocalizationEvaluationPlugin::evaluateReLocalizationForAllBenchmarkMissions() const {
   std::string selected_map_key;
+  VLOG(1) << "Selected map key: " << selected_map_key;
   if (!getSelectedMapKeyIfSet(&selected_map_key)) {
     return common::kStupidUserError;
   }
@@ -101,6 +107,37 @@ int ReLocalizationEvaluationPlugin::evaluateReLocalizationForOneBenchmarkMission
   VIMapLocalizer localizer(map.get());
   return localizer.reLocalizeOneMission(mission_ids, selected_map_key);
 }
+
+int ReLocalizationEvaluationPlugin::evaluateReLocalizationAccuracyForAllBenchmarkMissions() const {
+  std::string selected_map_key;
+  VLOG(1) << "Selected map key: " << selected_map_key;
+  if (!getSelectedMapKeyIfSet(&selected_map_key)) {
+    return common::kStupidUserError;
+  }
+  vi_map::VIMapManager map_manager;
+  vi_map::VIMapManager::MapWriteAccess map =
+      map_manager.getMapWriteAccess(selected_map_key);
+
+  if (!areQualitiesOfAllLandmarksSet(*map)) {
+    LOG(ERROR) << "Some landmarks are of unknown quality. Update them with the "
+               << "elq command.";
+    return common::kStupidUserError;
+  }
+
+  // Loop through all missions and evaluate against key map
+    // Get loop closure between one mission and key map and save localized keyframes
+    // -  Concurrently get the transformation between the two missions
+
+    // Remove connections (loopclosures) with residual over certain threshold (e.g 0.5m)
+
+    // use rpg trajectory to draw the trajectory of the mission minimizing the error (resdiuals of the loop closure)
+
+    // compare resulting position of keyframes (with newly drawn trajectory) with the ground truth
+
+  VIMapLocalizer localizer(map.get());
+  return localizer.reLocalizeAccuracyAllMissions(selected_map_key);
+}
+
 
 }  // namespace re_localization_evaluation_plugin
 

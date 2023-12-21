@@ -747,10 +747,21 @@ std::string VIMap::printMapStatistics(
   stats_text << std::endl;
   print_aligned("General:", "", 1);
   const size_t num_vertices = numVerticesInMission(mission_id);
+  pose_graph::VertexIdList verticesInMission;
+  getAllVertexIdsInMissionAlongGraph(mission_id, &verticesInMission);
   if (num_vertices == 0) {
     print_aligned(" - Mission has no vertices!", "", 1);
   } else {
     print_aligned(" - Vertices:", std::to_string(num_vertices), 1);
+
+    for(int i = 0; i < 10; ++i)
+    {
+      Eigen::Vector3d pos = getVertex_G_p_I(verticesInMission[i]);
+      print_aligned("- Vertex:", std::to_string(pos[0]) + " " + std::to_string(pos[1]) + " " + std::to_string(pos[2]), 1);
+    }
+
+
+
     print_aligned(
         " - Loop-closure edges: ", std::to_string(num_loop_closure_edges), 1);
     double distance = 0;
@@ -766,6 +777,12 @@ std::string VIMap::printMapStatistics(
     if (!vertex_ids.empty()) {
       const vi_map::Vertex& first_vertex = getVertex(vertex_ids.front());
       const vi_map::Vertex& last_vertex = getVertex(vertex_ids.back());
+
+      Eigen::Vector3d firstPos = first_vertex.get_p_M_I();
+      Eigen::Vector3d lastPos = last_vertex.get_p_M_I();
+
+      print_aligned("- Start Vertex:", std::to_string(firstPos[0]) + " " + std::to_string(firstPos[1]) + " " + std::to_string(firstPos[2]), 1);
+      print_aligned("- End Vertex:", std::to_string(lastPos[0]) + " " + std::to_string(lastPos[1]) + " " + std::to_string(lastPos[2]), 1);
 
       start_time_ns = first_vertex.getMinTimestampNanoseconds();
       end_time_ns = last_vertex.getMinTimestampNanoseconds();

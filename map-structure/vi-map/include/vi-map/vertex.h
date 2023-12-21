@@ -130,8 +130,8 @@ class Vertex : public pose_graph::Vertex {
   void setId(const pose_graph::VertexId& id);
 
   void set_T_M_I(const pose::Transformation& T_M_I);
-  void set_p_M_I(const Eigen::Vector3d& p_M_I);
-  void set_q_M_I(const Eigen::Quaterniond& q_M_I);
+  void set_p_M_I(const Eigen::Vector3d& p_M_I); 
+  void set_q_M_I(const Eigen::Quaterniond& q_M_I); 
   void set_v_M(const Eigen::Vector3d& v_M);
   void setAccelBias(const Eigen::Vector3d& accel_bias);
   void setGyroBias(const Eigen::Vector3d& gyro_bias);
@@ -159,11 +159,14 @@ class Vertex : public pose_graph::Vertex {
   double* getGyroBiasMutable();
 
   const pose::Transformation& get_T_M_I() const;
-  const Eigen::Quaterniond& get_q_M_I() const;
-  const Eigen::Vector3d& get_p_M_I() const;
+  const Eigen::Quaterniond& get_q_M_I() const; // Rotation
+  const Eigen::Vector3d& get_p_M_I() const; // Position
   const Eigen::Vector3d& get_v_M() const;
   const Eigen::Vector3d& getAccelBias() const;
   const Eigen::Vector3d& getGyroBias() const;
+
+  // ehosko: Helper function
+//   const vi_map::MissionId& getMissionId();
 
   const LandmarkId& getObservedLandmarkId(
       unsigned int frame_idx, int keypoint_idx) const;

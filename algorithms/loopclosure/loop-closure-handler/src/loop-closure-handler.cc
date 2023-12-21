@@ -48,7 +48,8 @@ bool addLoopClosureEdge(
     const vi_map::LandmarkIdSet& commonly_observed_landmarks,
     const pose_graph::VertexId& vertex_id_from_structure_matches,
     const aslam::Transformation& T_G_I_lc_ransac, vi_map::VIMap* map,
-    const int feature_type) {
+    const int feature_type,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) {
   CHECK(query_vertex_id.isValid());
   CHECK_NOTNULL(map)->hasVertex(vertex_id_from_structure_matches);
   CHECK(vertex_id_from_structure_matches != query_vertex_id);
@@ -171,10 +172,18 @@ bool addLoopClosureEdge(
       kSwitchVariable, FLAGS_lc_switch_variable_variance, T_Inn_Iquery_lc,
       T_Inn_Iquery_covariance));
 
+  // TODO (ehosko): change that only testing purpose
+  vi_map::Edge::UniquePtr loop_closure_edge_COPY(new vi_map::LoopClosureEdge(
+      loop_closure_edge_id, vertex_id_from_structure_matches, query_vertex_id,
+      kSwitchVariable, FLAGS_lc_switch_variable_variance, T_Inn_Iquery_lc,
+      T_Inn_Iquery_covariance));
+  
+
   VLOG(10) << "Added loop-closure edge between vertex "
            << query_vertex_id.hexString() << " and vertex "
            << vertex_id_from_structure_matches.hexString() << '.';
 
+  loop_closure_edges->push_back(std::move(loop_closure_edge_COPY));
   map->addEdge(std::move(loop_closure_edge));
 
   return true;
@@ -205,7 +214,8 @@ bool LoopClosureHandler::handleLoopClosure(
     vi_map::LoopClosureConstraint* inlier_constraints,
     MergedLandmark3dPositionVector* landmark_pairs_merged,
     pose_graph::VertexId* vertex_id_closest_to_structure_matches,
-    std::mutex* map_mutex, bool use_random_pnp_seed) const {
+    std::mutex* map_mutex, bool use_random_pnp_seed,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
   CHECK_NOTNULL(map_);
   CHECK_NOTNULL(num_inliers);
   CHECK_NOTNULL(T_G_I_ransac);
@@ -230,7 +240,7 @@ bool LoopClosureHandler::handleLoopClosure(
       merge_matching_landmarks, add_loopclosure_edges, num_inliers,
       inlier_ratio, T_G_I_ransac, &inlier_constraints->structure_matches,
       landmark_pairs_merged, vertex_id_closest_to_structure_matches, map_mutex,
-      use_random_pnp_seed);
+      use_random_pnp_seed,loop_closure_edges);
 }
 
 bool LoopClosureHandler::handleLoopClosure(
@@ -243,7 +253,8 @@ bool LoopClosureHandler::handleLoopClosure(
     vi_map::VertexKeyPointToStructureMatchList* inlier_structure_matches,
     MergedLandmark3dPositionVector* landmark_pairs_merged,
     pose_graph::VertexId* vertex_id_closest_to_structure_matches,
-    std::mutex* map_mutex, bool use_random_pnp_seed) const {
+    std::mutex* map_mutex, bool use_random_pnp_seed,
+    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
   CHECK_NOTNULL(num_inliers);
   CHECK_NOTNULL(inlier_ratio);
   CHECK_NOTNULL(T_G_I_ransac);
@@ -518,7 +529,7 @@ bool LoopClosureHandler::handleLoopClosure(
     CHECK(!commonly_observed_landmarks.empty());
     addLoopClosureEdge(
         query_vertex_id, commonly_observed_landmarks, lc_edge_target_vertex_id,
-        *T_G_I_ransac, map_, feature_type_);
+        *T_G_I_ransac, map_, feature_type_,loop_closure_edges);
   }
 
   if (merge_matching_landmarks) {

@@ -640,6 +640,11 @@ bool Vertex::areFrameAndKeypointIndicesValid(
          is_keypoint_index_valid;
 }
 
+// const vi_map::MissionId& Vertex::getMissionId() const
+// {
+//   return mission_id_;
+// }
+
 const LandmarkId& Vertex::getObservedLandmarkId(
     unsigned int frame_idx, int keypoint_idx) const {
   return observed_landmark_ids_[frame_idx][keypoint_idx];

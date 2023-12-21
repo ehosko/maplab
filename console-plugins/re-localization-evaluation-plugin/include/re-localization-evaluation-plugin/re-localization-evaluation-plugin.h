@@ -22,6 +22,7 @@ class ReLocalizationEvaluationPlugin : public common::ConsolePluginBase {
  private:
   int evaluateReLocalizationForAllBenchmarkMissions() const;
   int evaluateReLocalizationForOneBenchmarkMission() const;
+  int evaluateReLocalizationAccuracyForAllBenchmarkMissions() const;
 };
 }  // namespace re_localization_evaluation_plugin
 
