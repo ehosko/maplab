@@ -14,7 +14,7 @@ cs_add_executable(batch_runner src/batch-runner.cc)
 target_link_libraries(batch_runner ${PROJECT_NAME}_lib)
 
 cs_add_executable(re_localization_evaluation src/re-localization-evaluation.cc)
-target_link_libraries(re_localization_evaluation ${PROJECT_NAME}_lib)
+target_link_libraries(re_localization_evaluation PRIVATE stdc++fs ${PROJECT_NAME}_lib)
 
 cs_install()
 cs_export()

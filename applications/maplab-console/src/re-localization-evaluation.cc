@@ -1,4 +1,5 @@
 #include <iostream>
+#include <experimental/filesystem>
 
 #include <console-common/console.h>
 #include <gflags/gflags.h>
@@ -28,6 +29,8 @@
 //     - command1
 //     - command2
 //     - command3
+
+namespace fs = std::experimental::filesystem;
 
 const std::string kMapFolderTemplate("<CURRENT_VIMAP_FOLDER>");
 const std::string kMapMergeFolderTemplate("<MERGE_MAP_FOLDER>");
@@ -73,21 +76,6 @@ int main(int argc, char** argv) {
   FLAGS_alsologtostderr = true;
   FLAGS_colorlogtostderr = true;
 
-//   ros::init(argc, argv, "talker");
-
-//   ros::NodeHandle n;
-//   ros::Rate r(0.5);
-//   ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-   
-//   std_msgs::String msg;
-
-//   std::stringstream ss;
-//   ss << "hello world ";
-//   msg.data = ss.str();
-
-//   chatter_pub.publish(msg);
-//   ros::spinOnce();
-  //r.sleep();
 
   CHECK_NE(FLAGS_batch_control_file, "")
       << "You have to provide the path to the batch control yaml-file.";
@@ -101,7 +89,17 @@ int main(int argc, char** argv) {
                << FLAGS_batch_control_file;
   }
 
-  const size_t num_maps = control_information.vi_map_folder_paths.size();
+  std::vector<std::string> map_folders;
+
+  for (const auto& entry : fs::directory_iterator(control_information.vi_map_folder_paths[0])) {
+    if (fs::is_directory(entry.status())) {
+        //std::cout << entry.path() << std::endl;
+        map_folders.push_back(entry.path());
+        LOG(INFO) << "Found map folder: " << entry.path();
+    }
+  }
+
+  const size_t num_maps = map_folders.size();
   const size_t num_cmds = control_information.commands.size();
   LOG_IF(FATAL, num_maps == 0u) << "No maps supplied with file: "
                                 << FLAGS_batch_control_file;
@@ -114,7 +112,7 @@ int main(int argc, char** argv) {
   std::string built_map = control_information.built_maps[0];
 
   for (const std::string& map_folder :
-       control_information.vi_map_folder_paths) {
+       map_folders) {
     CHECK(common::pathExists(map_folder)) << "Map folder path " << map_folder
                                           << " does not exist.";
   }
@@ -124,8 +122,8 @@ int main(int argc, char** argv) {
 
   size_t map_idx = 1u;
   size_t num_failed_commands = 0u;
-  for (const std::string& map_folder :
-       control_information.vi_map_folder_paths) {
+  for (const std::string& map_folder :map_folders) 
+  {
     LOG(INFO) << "Running map (" << map_idx << " / " << num_maps
               << "): " << map_folder;
 

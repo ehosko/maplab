@@ -1,7 +1,7 @@
 vi_map_folder_paths:
- - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_73
+ - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_shortest_query/
 built_maps:
- - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_74
+ - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_eval
 commands:
  - load --map_folder=<CURRENT_VIMAP_FOLDER>
  - load_merge_map --map_folder=<MERGE_MAP_FOLDER>
