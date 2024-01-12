@@ -104,6 +104,18 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
     return common::kStupidUserError;
   }
 
+  if(FLAGS_log_dir.empty()) {
+    LOG(ERROR) << "Specify a valid log directory with -log_dir.";
+    return common::kStupidUserError;
+  }
+  
+  std::string filename = FLAGS_log_dir + "/lc_edges.csv";
+  std::ofstream logFile(filename, std::ios_base::app);
+  if (!logFile.is_open()) {
+    LOG(ERROR) << "Could not open file " << filename << " for writing.";
+    return common::kUnknownError;
+  }
+
   // Get ID of the to be evaluated map
   vi_map::MissionId evaluate_mission_id;
   map_->ensureMissionIdValid(FLAGS_evaluate_mission, &evaluate_mission_id);
@@ -130,7 +142,7 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
     pose::Transformation T_G_M2;
     vi_map::LoopClosureConstraintVector inlier_constraints;
 
-    std::vector<vi_map::Edge::UniquePtr> loop_closure_edges;
+    std::vector<vi_map::Edge::ConstPtr> loop_closure_edges;
 
     std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond>> evaluate_mission_vertices;
     std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond>> sample_mission_vertices;
@@ -151,7 +163,7 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
     // List of keyframes in the sample mission (as vertex)
     for(int i = 0; i <num_loop_closure_edges; ++i) {
 
-      const vi_map::Edge::UniquePtr& loop_closure_edge = loop_closure_edges[i];
+      const vi_map::Edge::ConstPtr& loop_closure_edge = loop_closure_edges[i];
 
       // Get the two vertices of the loop closure edge
       const pose_graph::VertexId& vertex_id_1 = loop_closure_edge->from();
@@ -160,6 +172,9 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
       // Get the two vertices of the loop closure edge
       const vi_map::Vertex& vertex_1 = map_->getVertex(vertex_id_1);
       const vi_map::Vertex& vertex_2 = map_->getVertex(vertex_id_2);
+
+      LOG(INFO) << "Vertex 1: " << vertex_1.getMissionId();
+      LOG(INFO) << "Vertex 2: " << vertex_2.getMissionId();
 
       // Transform into same coordinate system
       Eigen::Vector3d p2_I2 = vertex_2.get_p_M_I();
@@ -176,7 +191,8 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
       double eucl_distance = std::sqrt(std::pow(p1_position.x() - p2_I1.x(), 2) + std::pow(p1_position.y() - p2_I1.y(), 2) + std::pow(p1_position.z() - p2_I1.z(), 2));
       if(eucl_distance > thresh)
       {
-          VLOG(1) << "Removing loop closure edge with distance: " << eucl_distance;
+          // VLOG(1) << "Removing loop closure edge with distance: " << eucl_distance;
+          LOG(INFO) << "Removing loop closure edge with distance: " << eucl_distance;
           loop_closure_edges.erase(loop_closure_edges.begin() + i);
 
           // Move back one step in the loop to not skip the next edge
@@ -188,8 +204,13 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
         // Add the vertices to the list of vertices
         evaluate_mission_vertices.push_back(std::make_pair(p1_position, vertex_1.get_q_M_I()));
         sample_mission_vertices.push_back(std::make_pair(p2_I1, q2_I1));
+
+        logFile << *jt << "," << p1_position.x() << "," << p1_position.y() << "," << p1_position.z() << ","  
+                              << p2_I1.x() << "," << p2_I1.y() << "," << p2_I1.z() << "\n";
       }
-    }
+    } // For loop
+
+    logFile.close();
 
     // Align trajectories with rpg_trajectory_evaluation with remaining edges
     // Create list/vector of poses for the two missions as input for the alignment

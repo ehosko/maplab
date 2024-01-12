@@ -25,6 +25,7 @@ class VIMapLocalizer {
   int reLocalizeOneMission(const vi_map::MissionIdList& mission_ids, const std::string selected_map_key);
   int reLocalizeAccuracyAllMissions(const std::string selected_map_key);
   int reLocalizeAccuracyOneMission(const vi_map::MissionIdList& mission_ids, const std::string selected_map_key);
+  
 
  private:
   vi_map::VIMap* map_;

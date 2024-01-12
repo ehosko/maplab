@@ -49,7 +49,7 @@ bool addLoopClosureEdge(
     const pose_graph::VertexId& vertex_id_from_structure_matches,
     const aslam::Transformation& T_G_I_lc_ransac, vi_map::VIMap* map,
     const int feature_type,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>()) {
   CHECK(query_vertex_id.isValid());
   CHECK_NOTNULL(map)->hasVertex(vertex_id_from_structure_matches);
   CHECK(vertex_id_from_structure_matches != query_vertex_id);
@@ -156,6 +156,17 @@ bool addLoopClosureEdge(
           .getPosition()
           .squaredNorm();
 
+  // TODO (ehosko): change that only testing purpose
+  const double kSwitchVariable = 1.0;
+  CHECK_GT(FLAGS_lc_switch_variable_variance, 0.0);
+  vi_map::Edge::ConstPtr loop_closure_edge_COPY(new vi_map::LoopClosureEdge(
+      loop_closure_edge_id, vertex_id_from_structure_matches, query_vertex_id,
+      kSwitchVariable, FLAGS_lc_switch_variable_variance, T_Inn_Iquery_lc,
+      T_Inn_Iquery_covariance));
+
+  loop_closure_edges->push_back(std::move(loop_closure_edge_COPY));
+  LOG(INFO) << "Added loop-closure edge between vertex ";
+
   if (distance_lc_to_posegraph_meters_squared <
       (FLAGS_lc_edge_min_distance_meters * FLAGS_lc_edge_min_distance_meters)) {
     VLOG(10) << "Skipping creation of loop-closure edge because the gap "
@@ -164,16 +175,8 @@ bool addLoopClosureEdge(
              << FLAGS_lc_edge_min_distance_meters << ").";
     return false;
   }
-
-  const double kSwitchVariable = 1.0;
-  CHECK_GT(FLAGS_lc_switch_variable_variance, 0.0);
+  
   vi_map::Edge::UniquePtr loop_closure_edge(new vi_map::LoopClosureEdge(
-      loop_closure_edge_id, vertex_id_from_structure_matches, query_vertex_id,
-      kSwitchVariable, FLAGS_lc_switch_variable_variance, T_Inn_Iquery_lc,
-      T_Inn_Iquery_covariance));
-
-  // TODO (ehosko): change that only testing purpose
-  vi_map::Edge::UniquePtr loop_closure_edge_COPY(new vi_map::LoopClosureEdge(
       loop_closure_edge_id, vertex_id_from_structure_matches, query_vertex_id,
       kSwitchVariable, FLAGS_lc_switch_variable_variance, T_Inn_Iquery_lc,
       T_Inn_Iquery_covariance));
@@ -183,7 +186,6 @@ bool addLoopClosureEdge(
            << query_vertex_id.hexString() << " and vertex "
            << vertex_id_from_structure_matches.hexString() << '.';
 
-  loop_closure_edges->push_back(std::move(loop_closure_edge_COPY));
   map->addEdge(std::move(loop_closure_edge));
 
   return true;
@@ -215,7 +217,7 @@ bool LoopClosureHandler::handleLoopClosure(
     MergedLandmark3dPositionVector* landmark_pairs_merged,
     pose_graph::VertexId* vertex_id_closest_to_structure_matches,
     std::mutex* map_mutex, bool use_random_pnp_seed,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges) const {
   CHECK_NOTNULL(map_);
   CHECK_NOTNULL(num_inliers);
   CHECK_NOTNULL(T_G_I_ransac);
@@ -254,7 +256,7 @@ bool LoopClosureHandler::handleLoopClosure(
     MergedLandmark3dPositionVector* landmark_pairs_merged,
     pose_graph::VertexId* vertex_id_closest_to_structure_matches,
     std::mutex* map_mutex, bool use_random_pnp_seed,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges) const {
   CHECK_NOTNULL(num_inliers);
   CHECK_NOTNULL(inlier_ratio);
   CHECK_NOTNULL(T_G_I_ransac);

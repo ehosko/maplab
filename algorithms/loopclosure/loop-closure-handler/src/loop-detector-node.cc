@@ -793,7 +793,7 @@ void LoopDetectorNode::locateVertexInDatabase(
     std::mutex* map_mutex,
     std::unordered_map<pose_graph::VertexId, aslam::Transformation>*
               transform_dict,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>()) const {
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(raw_constraint);
   CHECK_NOTNULL(inlier_constraint);
@@ -925,7 +925,7 @@ bool LoopDetectorNode::detectLocalizationMissionToDatabase(
     pose::Transformation* T_G_M_estimate,
     vi_map::LoopClosureConstraintVector* inlier_constraints,
     const std::string selected_map_key,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges) const {
   CHECK(map->hasMission(mission_id));
   pose_graph::VertexIdList vertices;
   map->getAllVertexIdsInMission(mission_id, &vertices);
@@ -1165,7 +1165,7 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
     const pose_graph::VertexIdList& vertices_original,
     const std::string selected_map_key,
     const MissionId& mission_id,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges = new std::vector<vi_map::Edge::UniquePtr>()) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>()) const {
   CHECK(!vertices.empty());
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(T_G_M_estimate)->setIdentity();
@@ -1218,6 +1218,7 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
           std::unordered_map<pose_graph::VertexId, aslam::Transformation>
               transform_dict_local;
 
+          // TODO: append lc edges instead of overwriting them
           // Perform the actual query.
           locateVertexInDatabase(
               query_vertex_id, merge_landmarks, add_lc_edges, map,
@@ -1421,7 +1422,7 @@ bool LoopDetectorNode::handleLoopClosures(
         landmark_pairs_merged,
     pose_graph::VertexId* vertex_id_closest_to_structure_matches,
     std::mutex* map_mutex,
-    std::vector<vi_map::Edge::UniquePtr>* loop_closure_edges) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges) const {
   CHECK_NOTNULL(num_inliers);
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(T_G_I_ransac);

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<node name="reloc" pkg="maplab_console" type="re_localization_evaluation"  output="screen"/>
+
+</launch>

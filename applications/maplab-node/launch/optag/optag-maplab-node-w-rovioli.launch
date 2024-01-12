@@ -45,6 +45,6 @@
 		<!-- MAPLAB_NODE_CONFIG -->
 		<param name="map_save_every_n_sec" value="0"/>
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse"/> -->
-		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/>
+		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze_eval"/>
 	</node>
 </launch>

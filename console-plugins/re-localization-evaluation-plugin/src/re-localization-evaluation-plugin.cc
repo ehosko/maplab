@@ -4,7 +4,8 @@
 #include <console-common/console.h>
 #include <map-manager/map-manager.h>
 #include <vi-map/vi-map.h>
-
+#include <sstream>
+#include <std_msgs/String.h>
 
 // TODO: (michbaum) Check what is needed
 #include <descriptor-projection/train-projection-matrix.h>
@@ -77,6 +78,28 @@ int ReLocalizationEvaluationPlugin::evaluateReLocalizationForAllBenchmarkMission
 }
 
 int ReLocalizationEvaluationPlugin::evaluateReLocalizationForOneBenchmarkMission() const {
+  
+  // int argc = 0;
+  // char **argv = NULL;
+  // ros::init(argc, argv, "talker");
+
+  // ros::Rate r(0.5);
+
+  // ros::NodeHandle n;
+  // ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
+   
+  // std_msgs::String msg;
+
+  // std::stringstream ss;
+  // ss << "hello world ";
+  // msg.data = ss.str();
+
+  // chatter_pub.publish(msg);
+  // ros::spinOnce();
+  // r.sleep();
+
+
+
   std::string selected_map_key;
   if (!getSelectedMapKeyIfSet(&selected_map_key)) {
     return common::kStupidUserError;

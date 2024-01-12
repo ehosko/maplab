@@ -1,0 +1,8 @@
+vi_map_folder_paths:
+ - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_73
+built_maps:
+ - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_74
+commands:
+ - load --map_folder=<CURRENT_VIMAP_FOLDER>
+ - load_merge_map --map_folder=<MERGE_MAP_FOLDER>
+ - rlae -evaluate_mission 8ed138d50d48a9170a00000000000000 -log_dir /home/michbaum/Projects/maplab/data/loopclosure/
