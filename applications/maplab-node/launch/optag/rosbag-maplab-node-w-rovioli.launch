@@ -15,7 +15,8 @@
 			<param name="sensor_calibration_file" value="$(find maplab_node)/launch/optag/calib/rosbag.yaml"/>
 			<param name="imu_to_camera_time_offset_ns" value="0"/>
 			<!-- Make sure that the suffix of all the camera topics to be used matches this here -->
-			<param name="vio_camera_topic_suffix" value="image_raw"/>
+			<!-- <param name="vio_camera_topic_suffix" value="image_raw"/> -->
+			<param name="vio_camera_topic_suffix" value="isaac_gray_image_out"/>
 
 			<!-- ROVIOLI CONFIG -->
 			<param name="rovioli_run_map_builder" value="false"/>
@@ -37,13 +38,14 @@
 		<param name="sensor_calibration_file" value="$(find maplab_node)/launch/optag/calib/rosbag.yaml"/>
 		<param name="imu_to_camera_time_offset_ns" value="0"/>
 		<!-- Make sure that the suffix of all the camera topics to be used matches this here -->
-		<param name="vio_camera_topic_suffix" value="image_raw"/>
+		<!-- <param name="vio_camera_topic_suffix" value="image_raw"/> -->
+		<param name="vio_camera_topic_suffix" value="isaac_gray_image_out"/>
 
 		<!-- MAPLAB_NODE_CONFIG -->
 		<param name="map_save_every_n_sec" value="0"/>
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/> -->
 		<!-- Workstation -->
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse_query_maps_without_windows_corrected/warehouse"/> -->
-		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse_bag"/>
+		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/maze"/>
 	</node>
 </launch>

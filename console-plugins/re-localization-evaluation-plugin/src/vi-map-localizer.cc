@@ -147,17 +147,25 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
     std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond>> evaluate_mission_vertices;
     std::vector<std::pair<Eigen::Vector3d, Eigen::Quaterniond>> sample_mission_vertices;
 
+    bool transformation_found = false;
+
     // loop_detector.detectLoopClosuresAndMergeLandmarks(*jt, map_);
     VLOG(1) << "Localizing mission " << *jt << " w.r.t. mission " << evaluate_mission_id << ".";
     loop_detector.detectLocalizationMissionToDatabase(
       *jt, kMergeLandmarks, kAddLoopClosureEdges, map_, &T_G_M2,
-      &inlier_constraints, selected_map_key, &loop_closure_edges);
+      &inlier_constraints, selected_map_key, &loop_closure_edges,&transformation_found);
 
     int num_loop_closure_edges = loop_closure_edges.size();
     VLOG(1) << "Number of loop closure edges: " << loop_closure_edges.size();
 
-    // TODO (ehosko) : need to add aam computation here to get more results for transformation matrix (or reset threshold if possible)
+
     VLOG(1) << "Transformation Matrix: " << T_G_M2;
+
+    if(!transformation_found)
+    {
+      LOG(ERROR) << "No transformation found for mission " << *jt << " w.r.t. mission " << evaluate_mission_id << ".";
+      continue;
+    }
     // Align missions
     // List of keyframes in the to-be-evaluated mission (as vertex)
     // List of keyframes in the sample mission (as vertex)
@@ -208,18 +216,11 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
         logFile << *jt << "," << p1_position.x() << "," << p1_position.y() << "," << p1_position.z() << ","  
                               << p2_I1.x() << "," << p2_I1.y() << "," << p2_I1.z() << "\n";
       }
-    } // For loop
+    }
 
-    logFile.close();
-
-    // Align trajectories with rpg_trajectory_evaluation with remaining edges
-    // Create list/vector of poses for the two missions as input for the alignment
-
-    // Compare new poses with ground truth poses
-
-    // Write results to csv file
   }
 
+  logFile.close();
 
   return common::kSuccess;
 }

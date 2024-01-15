@@ -1,7 +1,7 @@
 # SENSORS
 sensor_calibration_file:                 ""
 imu_to_camera_time_offset_ns:            0
-vio_camera_topic_suffix:                 "/image_raw"
+vio_camera_topic_suffix:                 "/isaac_gray_image_out"
 vio_nframe_sync_tolerance_ns:            500000
 vio_nframe_sync_max_output_frequency_hz: 10
 

@@ -1,6 +1,6 @@
 sensors:
   - id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
-    topic: /imu0
+    topic: /firefly/imu # TODO (ehosko)
     description: "VI-Sensor IMU (ADIS16448)"
     sensor_type: IMU
     sigmas:
@@ -35,7 +35,7 @@ sensors:
           id: 54812562fa109c40fe90b29a59dd7798
           sensor_type: CAMERA
           description: "VI-Sensor cam0"
-          topic: /cam0
+          topic: /isaac/isaac_ros_client
           line-delay-nanoseconds: 0
           image_height: 480
           image_width: 640

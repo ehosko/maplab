@@ -2,7 +2,7 @@
 sensor_calibration_file:                 ""
 imu_to_camera_time_offset_ns:            0
 external_imu_parameters_rovio:           ""
-vio_camera_topic_suffix:                 "/image_raw"
+vio_camera_topic_suffix:                 "/isaac_gray_image_out"
 vio_nframe_sync_tolerance_ns:            500000
 vio_nframe_sync_max_output_frequency_hz: 10
 
@@ -41,7 +41,7 @@ vio_localization_map_folder: ""
 # TF
 tf_map_frame:     map
 tf_mission_frame: mission
-tf_imu_frame:     imu
+tf_imu_frame:     rovioli/imu
 
 # DEBUGGING AND LOGGING
 alsologtostderr:                                true

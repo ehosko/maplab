@@ -83,7 +83,8 @@ class LoopDetectorNode final {
     pose::Transformation* T_G_M_estimate,
     vi_map::LoopClosureConstraintVector* inlier_constraints,
     const std::string selected_map_key,
-    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>()) const;
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>(),
+    bool* transform_found = NULL) const;
 
   bool detectLoopClosuresVerticesToDatabase(
       const pose_graph::VertexIdList& vertices, const bool merge_landmarks,
@@ -99,7 +100,8 @@ class LoopDetectorNode final {
     const pose_graph::VertexIdList& vertices_original,
     const std::string selected_map_key,
     const MissionId& mission_id,
-    std::vector<vi_map::Edge::ConstPtr>*) const;
+    std::vector<vi_map::Edge::ConstPtr>*,
+    bool* transform_found) const;
 
   void instantiateVisualizer();
 

@@ -925,7 +925,8 @@ bool LoopDetectorNode::detectLocalizationMissionToDatabase(
     pose::Transformation* T_G_M_estimate,
     vi_map::LoopClosureConstraintVector* inlier_constraints,
     const std::string selected_map_key,
-    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges,
+    bool* transform_found) const {
   CHECK(map->hasMission(mission_id));
   pose_graph::VertexIdList vertices;
   map->getAllVertexIdsInMission(mission_id, &vertices);
@@ -957,7 +958,7 @@ bool LoopDetectorNode::detectLocalizationMissionToDatabase(
 
   return detectLocalizationVerticesToDatabase(
       vertices, merge_landmarks, add_lc_edges, map, T_G_M_estimate,
-      inlier_constraints, vertices_copy, selected_map_key, mission_id,loop_closure_edges);
+      inlier_constraints, vertices_copy, selected_map_key, mission_id,loop_closure_edges,transform_found);
 }
 
 
@@ -1165,7 +1166,8 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
     const pose_graph::VertexIdList& vertices_original,
     const std::string selected_map_key,
     const MissionId& mission_id,
-    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>()) const {
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>(),
+    bool* transform_found = NULL) const {
   CHECK(!vertices.empty());
   CHECK_NOTNULL(map);
   CHECK_NOTNULL(T_G_M_estimate)->setIdentity();
@@ -1375,8 +1377,12 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
   if (num_inliers < kNumInliersThreshold) {
     LOG(INFO) << "Not enough inliers to compute T_G_M! (threshold: "
               << kNumInliersThreshold << ")";
+    *transform_found = false;
     return false;
   }
+
+  *transform_found = true;
+
   const Eigen::Quaterniond& q_G_M_LS =
       T_G_M_LS.getRotation().toImplementation();
 
