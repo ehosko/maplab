@@ -126,7 +126,7 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
   const bool kMergeLandmarks = false;
 
   // Temp threshold parameter
-  double thresh = 1.0;
+  double thresh = 2.0;
 
   // We only want to localize all benchmark submaps w.r.t. the main map
   
@@ -181,8 +181,8 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
       const vi_map::Vertex& vertex_1 = map_->getVertex(vertex_id_1);
       const vi_map::Vertex& vertex_2 = map_->getVertex(vertex_id_2);
 
-      LOG(INFO) << "Vertex 1: " << vertex_1.getMissionId();
-      LOG(INFO) << "Vertex 2: " << vertex_2.getMissionId();
+      VLOG(1) << "Vertex 1: " << vertex_1.getMissionId();
+      VLOG(1) << "Vertex 2: " << vertex_2.getMissionId();
 
       // Transform into same coordinate system
       Eigen::Vector3d p2_I2 = vertex_2.get_p_M_I();
@@ -199,8 +199,8 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
       double eucl_distance = std::sqrt(std::pow(p1_position.x() - p2_I1.x(), 2) + std::pow(p1_position.y() - p2_I1.y(), 2) + std::pow(p1_position.z() - p2_I1.z(), 2));
       if(eucl_distance > thresh)
       {
-          // VLOG(1) << "Removing loop closure edge with distance: " << eucl_distance;
-          LOG(INFO) << "Removing loop closure edge with distance: " << eucl_distance;
+          VLOG(1) << "Removing loop closure edge with distance: " << eucl_distance;
+        
           loop_closure_edges.erase(loop_closure_edges.begin() + i);
 
           // Move back one step in the loop to not skip the next edge

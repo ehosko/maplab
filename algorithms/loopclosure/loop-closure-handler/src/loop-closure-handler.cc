@@ -165,7 +165,7 @@ bool addLoopClosureEdge(
       T_Inn_Iquery_covariance));
 
   loop_closure_edges->push_back(std::move(loop_closure_edge_COPY));
-  LOG(INFO) << "Added loop-closure edge between vertex ";
+  VLOG(1) << "Added loop-closure edge between vertex ";
 
   if (distance_lc_to_posegraph_meters_squared <
       (FLAGS_lc_edge_min_distance_meters * FLAGS_lc_edge_min_distance_meters)) {
