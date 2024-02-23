@@ -32,7 +32,7 @@ map_remove_bad_landmarks:                             false
 map_initialize_and_triangulate_landmarks_when_saving: true
 
 # SUBMAPPING
-map_save_every_n_sec: 0
+map_save_every_n_sec: 30
 # TODO: (michbaum) Is this desireable for our use case?
 map_split_map_into_submaps_when_saving_periodically: true
 

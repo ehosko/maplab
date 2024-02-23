@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <launch>
+	<arg name="output_folder" default="/home/michbaum/Projects/maplab/data/vimaps/maze_test_eval/" />
+
 	<node pkg="rviz" type="rviz" name="maplab_rviz" args="-d $(find maplab_node)/share/maplab.rviz -f map"/>
 
 	<!-- ROVIOLI -->
@@ -46,6 +48,6 @@
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/> -->
 		<!-- Workstation -->
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse_query_maps_without_windows_corrected/warehouse"/> -->
-		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/maze"/>
+		<param name="map_output_folder" value="$(arg output_folder)/map_bag"/>
 	</node>
 </launch>

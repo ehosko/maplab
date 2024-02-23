@@ -753,6 +753,8 @@ void LoopDetectorNode::queryVertexInDatabase(
     int num_inliers = 0;
     double inlier_ratio = 0.0;
 
+    std::vector<vi_map::Edge::ConstPtr>* loop_closure_edges = new std::vector<vi_map::Edge::ConstPtr>();
+
     // The estimated transformation of this vertex to the map.
     pose::Transformation T_G_I_ransac;
     constexpr pose_graph::VertexId* kVertexIdClosestToStructureMatches =
@@ -760,7 +762,8 @@ void LoopDetectorNode::queryVertexInDatabase(
     bool ransac_ok = handleLoopClosures(
         *raw_constraint, merge_landmarks, add_lc_edges, &num_inliers,
         &inlier_ratio, map, &T_G_I_ransac, inlier_constraint,
-        landmark_pairs_merged, kVertexIdClosestToStructureMatches, map_mutex);
+        landmark_pairs_merged, kVertexIdClosestToStructureMatches, map_mutex,loop_closure_edges);
+
 
     if (ransac_ok) {
       // TODO: (michbaum) Found a loop closure/re-localization of the vertex -> Save it!

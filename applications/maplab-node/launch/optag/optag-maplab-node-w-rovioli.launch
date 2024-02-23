@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 
 <launch>
+
+	<arg name="output_folder" default="/home/michbaum/Projects/maplab/data/vimaps/maze_test_eval/"/>
+
 	<node pkg="rviz" type="rviz" name="maplab_rviz" args="-d $(find maplab_node)/share/optag.rviz -f map"/>
 
 	<!-- ROVIOLI -->
@@ -43,8 +46,8 @@
 		<param name="vio_camera_topic_suffix" value="isaac_gray_image_out"/>
 
 		<!-- MAPLAB_NODE_CONFIG -->
-		<param name="map_save_every_n_sec" value="0"/>
+		<param name="map_save_every_n_sec" value="30"/>
 		<!-- <param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse"/> -->
-		<param name="map_output_folder" value="/home/michbaum/Projects/maplab/data/vimaps/maze/maze"/>
+		<param name="map_output_folder" value="$(arg output_folder)/map"/>
 	</node>
 </launch>

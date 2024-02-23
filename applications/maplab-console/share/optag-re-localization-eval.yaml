@@ -1,11 +1,25 @@
 vi_map_folder_paths:
- - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/
+#  - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/
+#  - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_multiple/maze_merged_multiple_maps/
+  - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/maze_merged_query_maps
 
 # maze190 - localized all
 built_maps:
- - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_drift_aware_eval
+  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/maps/merged_map_1
+  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/maps/merged_map_2
+  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/maps/merged_map_3
+  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/maps/merged_map_4
+  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/maps/merged_map_5
+
+command_flags:
+  - -evaluate_mission 4064f1804935b6170a00000000000000 -evaluate_mission_second 07744cb024f9b5170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/run_1/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 245014b54737b6170a00000000000000 -evaluate_mission_second 0c9b9149f9fab5170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/run_2/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission d80141d6e9fbb5170a00000000000000 -evaluate_mission_second 01828fadccfcb5170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/run_3/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 955550bdbdfdb5170a00000000000000 -evaluate_mission_second 8dd6f2bca0feb5170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/run_4/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission cef5cdbb883ab6170a00000000000000 -evaluate_mission_second 34d11d407500b6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_planner/run_5/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
 
 commands:
  - load --map_folder=<CURRENT_VIMAP_FOLDER>
  - load_merge_map --map_folder=<MERGE_MAP_FOLDER>
- - rlae -evaluate_mission 1beec8bc8ca4a9170a00000000000000 -log_dir /home/michbaum/Projects/maplab/data/loopclosure/maze/drift_aware_eval -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+#  - rlae -evaluate_mission 1beec8bc8ca4a9170a00000000000000 -log_dir /home/michbaum/Projects/maplab/data/loopclosure/maze/drift_aware_eval -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+ - rlae

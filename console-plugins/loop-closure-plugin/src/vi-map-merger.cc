@@ -94,6 +94,7 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
       if (plotter_ != nullptr) {
         loop_detector.instantiateVisualizer();
       }
+      loop_detector.addMissionToDatabase(*it, *map_);
       for (vi_map::MissionIdList::const_iterator jt = mission_ids.begin();
            jt != mission_ids.end(); ++jt) {
         if (FLAGS_lc_only_against_other_missions && *jt == *it) {

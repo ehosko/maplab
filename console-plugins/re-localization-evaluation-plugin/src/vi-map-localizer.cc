@@ -6,6 +6,7 @@
 
 
 DEFINE_string(evaluate_mission, "", "Mission to be evaluated.");
+DEFINE_string(evaluate_mission_second, "", "Second Mission to be evaluated.");
 
 namespace re_localization_evaluation_plugin {
 
@@ -55,7 +56,6 @@ int VIMapLocalizer::reLocalizeOneMission(
   const bool kMergeLandmarks = false;
 
   // We only want to localize all benchmark submaps w.r.t. the main map
-  
   loop_detector_node::LoopDetectorNode loop_detector;
   loop_detector.addMissionToDatabase(evaluate_mission_id, *map_);
   for (vi_map::MissionIdList::const_iterator jt = mission_ids.begin();
@@ -104,6 +104,12 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
     return common::kStupidUserError;
   }
 
+  if(FLAGS_evaluate_mission_second.empty()) {
+    LOG(INFO) << "Only evaluating against one mission.";
+    LOG(INFO) << "If you wish to evaluate against two mission, specify -evaluate_mission_second.";
+    //return common::kStupidUserError;
+  }
+
   if(FLAGS_log_dir.empty()) {
     LOG(ERROR) << "Specify a valid log directory with -log_dir.";
     return common::kStupidUserError;
@@ -116,6 +122,20 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
     return common::kUnknownError;
   }
 
+  std::string filenameID = FLAGS_log_dir + "/missionIDList.txt";
+  std::ofstream logIDFile(filenameID, std::ios_base::app);
+  if (!logIDFile.is_open()) {
+    LOG(ERROR) << "Could not open file " << filenameID << " for writing.";
+    return common::kUnknownError;
+  }
+
+  for(auto mission_id: mission_ids)
+  {
+    logIDFile << mission_id << std::endl;
+  }
+
+  logIDFile.close();
+
   // Get ID of the to be evaluated map
   vi_map::MissionId evaluate_mission_id;
   map_->ensureMissionIdValid(FLAGS_evaluate_mission, &evaluate_mission_id);
@@ -126,16 +146,31 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
   const bool kMergeLandmarks = false;
 
   // Temp threshold parameter
-  double thresh = 2.0;
+  double thresh = 5.0;
 
   // We only want to localize all benchmark submaps w.r.t. the main map
   
   loop_detector_node::LoopDetectorNode loop_detector;
   loop_detector.addMissionToDatabase(evaluate_mission_id, *map_);
+
+  vi_map::MissionId evaluate_second_mission_id;
+  if(!FLAGS_evaluate_mission_second.empty())
+  {
+    map_->ensureMissionIdValid(FLAGS_evaluate_mission_second, &evaluate_second_mission_id);
+    VLOG(1) << "Second to be evaluated mission: " << evaluate_second_mission_id;
+
+    loop_detector.addMissionToDatabase(evaluate_second_mission_id, *map_);
+  }
+
   for (vi_map::MissionIdList::const_iterator jt = mission_ids.begin();
         jt != mission_ids.end(); ++jt) {
     if (*jt == evaluate_mission_id) {
       VLOG(1) << "Skipping mission " << *jt << " because it is the same as the "
+              << "to-be-evaluated mission. Also, something went wrong here!";
+      continue;
+    }
+    if(!FLAGS_evaluate_mission_second.empty() && *jt == evaluate_second_mission_id) {
+      VLOG(1) << "Skipping mission " << *jt << " because it is the same as the second "
               << "to-be-evaluated mission. Also, something went wrong here!";
       continue;
     }
@@ -213,7 +248,11 @@ int VIMapLocalizer::reLocalizeAccuracyOneMission(
         evaluate_mission_vertices.push_back(std::make_pair(p1_position, vertex_1.get_q_M_I()));
         sample_mission_vertices.push_back(std::make_pair(p2_I1, q2_I1));
 
-        logFile << *jt << "," << p1_position.x() << "," << p1_position.y() << "," << p1_position.z() << ","  
+        // TODO: (ehosko) clarify what exactly to write here
+        // logFile << *jt << "," << p1_position.x() << "," << p1_position.y() << "," << p1_position.z() << ","  
+        //                       << p2_I2.x() << "," << p2_I2.y() << "," << p2_I2.z() << "\n";
+
+        logFile << vertex_1.getMissionId() << "," << *jt << "," << p1_position.x() << "," << p1_position.y() << "," << p1_position.z() << ","  
                               << p2_I1.x() << "," << p2_I1.y() << "," << p2_I1.z() << "\n";
       }
     }
