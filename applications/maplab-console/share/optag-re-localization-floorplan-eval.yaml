@@ -1,25 +1,22 @@
 vi_map_folder_paths:
-#  - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/
-#  - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_multiple/maze_merged_multiple_maps/
-  - /home/michbaum/Projects/maplab/data/vimaps/maze/maze_query_maps_bags/maze_merged_query_maps
+  - /home/michbaum/Projects/maplab/data/vimaps/warehouse/warehouse_query_maps_bag/warehouse_merged_query_bags
 
-# maze190 - localized all
 built_maps:
-  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/maps/merged_map_1
-  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/maps/merged_map_2
-  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/maps/merged_map_3
-  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/maps/merged_map_4
-  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/maps/merged_map_5
+  - /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/run_1/map
+  - /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_2/map
+  - /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_3/map
+  - /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_4/map
+  - /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_5/map
 
 command_flags:
-  - -evaluate_mission 94fffc795f32b6170a00000000000000 -evaluate_mission_second 33c25ab74802b6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/run_1/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
-  - -evaluate_mission 114325483a03b6170a00000000000000 -evaluate_mission_second 0b1137321d04b6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/run_2/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
-  - -evaluate_mission e57770d30d05b6170a00000000000000 -evaluate_mission_second b55bb165a63db6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/run_3/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
-  - -evaluate_mission 23dab570e206b6170a00000000000000 -evaluate_mission_second 82f7d85ec507b6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/run_4/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
-  - -evaluate_mission 404ff24a853bb6170a00000000000000 -evaluate_mission_second 5ccae7169a09b6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/maze/drift_aware_floorplan_planner/run_5/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 94fffc795f32b6170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_1/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 3a8e0b233487b7170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_2/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 0ebdcbeb9089b7170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_3/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 3d2353c3ed8bb7170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_4/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
+  - -evaluate_mission 875c6a9c4a8eb7170a00000000000000 -log_dir /home/michbaum/Projects/optag_EH/data/Warehouse/drift_aware_floorplan_planner/run_5/ -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
 
 commands:
  - load --map_folder=<CURRENT_VIMAP_FOLDER>
  - load_merge_map --map_folder=<MERGE_MAP_FOLDER>
-#  - rlae -evaluate_mission 1beec8bc8ca4a9170a00000000000000 -log_dir /home/michbaum/Projects/maplab/data/loopclosure/maze/drift_aware_eval -anchor_transform_min_inlier_count 3 -anchor_transform_min_inlier_ratio 0.1
  - rlae
+

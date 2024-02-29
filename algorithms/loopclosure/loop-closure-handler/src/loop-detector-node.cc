@@ -1223,7 +1223,6 @@ bool LoopDetectorNode::detectLocalizationVerticesToDatabase(
           std::unordered_map<pose_graph::VertexId, aslam::Transformation>
               transform_dict_local;
 
-          // TODO: append lc edges instead of overwriting them
           // Perform the actual query.
           locateVertexInDatabase(
               query_vertex_id, merge_landmarks, add_lc_edges, map,

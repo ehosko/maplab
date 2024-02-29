@@ -86,7 +86,7 @@ int VIMapMerger::findLoopClosuresBetweenMissions(
     // We want to try to loop close every mission pair
     // This is the basic way for a single map lc
     VLOG(1) << "Loop closing between all missions" << std::endl;
-    // TODO: (ehosko) Outer loop not needed - only loop against first map
+
     for (vi_map::MissionIdList::const_iterator it = mission_ids.begin();
          it != mission_ids.end(); ++it) {
       CHECK(it->isValid());
@@ -120,7 +120,6 @@ int VIMapMerger::findLoopClosuresBetweenFirstAndOtherMissions(
   }
 
   VLOG(1) << "Loop closing between first against other missions" << std::endl;
-  // TODO: (ehosko) Outer loop not needed - only loop against first map
   vi_map::MissionIdList::const_iterator it = mission_ids.begin();
   CHECK(it->isValid());
   loop_detector_node::LoopDetectorNode loop_detector;
@@ -128,20 +127,7 @@ int VIMapMerger::findLoopClosuresBetweenFirstAndOtherMissions(
     loop_detector.instantiateVisualizer();
   }
   loop_detector.addMissionToDatabase(*it, *map_);
-  loop_detector.outputFile = "/home/michbaum/Projects/maplab/data/loopclosure/test3.csv";
-  // Create and open csv file for output
-  std::ofstream outputStream;
-  //std::string driftlogfile_ = "/home/michbaum/Projects/maplab/data/loopclosure/test2.csv";
-  outputStream.open(loop_detector.outputFile.c_str());
-  if (!outputStream.is_open())
-  {
-    LOG(INFO) << "Failed to open log file";
-  }
-  else
-  {
-    outputStream << "ratio\n";
-    outputStream.close();
-  }
+
   for (vi_map::MissionIdList::const_iterator jt = mission_ids.begin() + 1;
         jt != mission_ids.end(); ++jt) {
     if (FLAGS_lc_only_against_other_missions && *jt == *it) {

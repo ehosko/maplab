@@ -156,7 +156,6 @@ bool addLoopClosureEdge(
           .getPosition()
           .squaredNorm();
 
-  // TODO (ehosko): change that only testing purpose
   const double kSwitchVariable = 1.0;
   CHECK_GT(FLAGS_lc_switch_variable_variance, 0.0);
   vi_map::Edge::ConstPtr loop_closure_edge_COPY(new vi_map::LoopClosureEdge(

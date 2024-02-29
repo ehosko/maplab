@@ -1,6 +1,6 @@
 sensors:
   - id: c63aecb41bfdfd6b7e1fac37c7cbe7bf
-    topic: /firefly/imu # TODO (ehosko)
+    topic: /firefly/imu
     description: "VI-Sensor IMU (ADIS16448)"
     sensor_type: IMU
     sigmas:

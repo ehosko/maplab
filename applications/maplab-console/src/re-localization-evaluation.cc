@@ -14,21 +14,29 @@
 
 #include "maplab-console/maplab-console.h"
 
-// This executable reads yaml files and executes the commands from it on all
+// This executable is specialized on the computation of the re-loclization errror.
+// It reads yaml files and executes the commands from it on all
 // maps in the list. The files have the following format:
 // The template string "<CURRENT_VIMAP_FOLDER>" is replaced by the currently
-// processed map. This can be used e.g. to save the resulting map to a
-// different folder:
-//    save -map_folder=<CURRENT_VIMAP_FOLDER>_result
+// processed map of the list vi_map_folder_paths. The template string "<MERGE_MAP_FOLDER>" is
+// replaced by the currently processed map of the list built_maps. 
+// command_flags have to be in the order of the correspodning built map and are only considerd for the commane 'rlae'.
+// The commands are executed in the order they are listed in the yaml file.
 //
 // Yaml-format:
 //   vi_map_folder_paths:
 //     - /some/path/map1
 //     - /some/path/map2
+//   built_maps:
+//     - /some/path/built_map1
+//     - /some/path/built_map2
+//   command_flags:
+//     - "some flags" (corrersponding to built_map1)
+//     - "some other flags" (corrersponding to built_map2)
 //   commands:
 //     - command1
 //     - command2
-//     - command3
+//     - command3 (rlae)
 
 namespace fs = std::experimental::filesystem;
 
@@ -92,42 +100,28 @@ int main(int argc, char** argv) {
                << FLAGS_batch_control_file;
   }
 
+  // Set the parameters from the yaml file.
   std::vector<std::string> map_folders = control_information.vi_map_folder_paths;
 
-  // for (const auto& entry : fs::directory_iterator(control_information.vi_map_folder_paths[0])) {
-  //   if (fs::is_directory(entry.status())) {
-  //       //std::cout << entry.path() << std::endl;
-  //       map_folders.push_back(entry.path());
-  //       LOG(INFO) << "Found map folder: " << entry.path();
-  //   }
-  // }
-
   std::vector<std::string> built_maps = control_information.built_maps;
-  // std::vector<std::string> built_maps;
-
-  // for (const auto& entry : fs::directory_iterator(control_information.built_maps[0])) {
-  //   if (fs::is_directory(entry.status())) {
-  //       //std::cout << entry.path() << std::endl;
-  //       built_maps.push_back(entry.path());
-  //       LOG(INFO) << "Found map folder: " << entry.path();
-  //   }
-  // }
 
   std::vector<std::string> command_flags = control_information.command_flags;
   std::cout << "command_flags: " << command_flags[0] << std::endl;
 
 
   const size_t num_maps = map_folders.size();
+  const size_t num_built_maps = control_information.built_maps.size();
   const size_t num_cmds = control_information.commands.size();
   LOG_IF(FATAL, num_maps == 0u) << "No maps supplied with file: "
                                 << FLAGS_batch_control_file;
+  LOG_IF(FATAL, num_built_maps == 0u) << "No built maps supplied with file: "
+                                << FLAGS_batch_control_file;                             
   LOG_IF(FATAL, num_cmds == 0u) << "No commands supplied with file: "
                                 << FLAGS_batch_control_file;
 
   LOG(INFO) << "Got " << num_cmds << " commands to apply on " << num_maps
-            << " maps.";
+            << " maps and " << num_built_maps << "built maps.";
 
-  //std::string built_map = control_information.built_maps[0];
 
   for (const std::string& map_folder :
        map_folders) {
@@ -140,7 +134,6 @@ int main(int argc, char** argv) {
 
   size_t map_idx = 1u;
   size_t built_map_idx = 1u;
-  size_t num_built_maps = built_maps.size();
   size_t num_failed_commands = 0u;
   for(const std::string& built_map :built_maps){
     map_idx = 1u;
@@ -161,8 +154,6 @@ int main(int argc, char** argv) {
       }
       const std::string kNoMapSelected = "";
       console.setSelectedMapKey(kNoMapSelected);
-
-
 
       // Run all commands on this map.
       size_t cmd_idx = 1u;

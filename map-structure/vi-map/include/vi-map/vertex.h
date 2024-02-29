@@ -165,8 +165,6 @@ class Vertex : public pose_graph::Vertex {
   const Eigen::Vector3d& getAccelBias() const;
   const Eigen::Vector3d& getGyroBias() const;
 
-  // ehosko: Helper function
-//   const vi_map::MissionId& getMissionId();
 
   const LandmarkId& getObservedLandmarkId(
       unsigned int frame_idx, int keypoint_idx) const;

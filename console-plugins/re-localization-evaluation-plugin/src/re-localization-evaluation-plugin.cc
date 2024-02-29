@@ -38,7 +38,7 @@ ReLocalizationEvaluationPlugin::ReLocalizationEvaluationPlugin(
   addCommand(
       {"rlae", "re_localization_quality_accuracy_all_query_missions"},
       [this]() -> int { return evaluateReLocalizationAccuracyForAllBenchmarkMissions(); },
-      "Evaluate the re-localization accuracy between all query missions and the to be evaluated mission.", common::Processing::Sync);
+      "Evaluate the re-localization accuracy between all query missions and the to be evaluated mission. In this step only the loop closure edges and the corresponding keyframe positions are collected.", common::Processing::Sync);
 
 }
 
@@ -78,27 +78,6 @@ int ReLocalizationEvaluationPlugin::evaluateReLocalizationForAllBenchmarkMission
 }
 
 int ReLocalizationEvaluationPlugin::evaluateReLocalizationForOneBenchmarkMission() const {
-  
-  // int argc = 0;
-  // char **argv = NULL;
-  // ros::init(argc, argv, "talker");
-
-  // ros::Rate r(0.5);
-
-  // ros::NodeHandle n;
-  // ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
-   
-  // std_msgs::String msg;
-
-  // std::stringstream ss;
-  // ss << "hello world ";
-  // msg.data = ss.str();
-
-  // chatter_pub.publish(msg);
-  // ros::spinOnce();
-  // r.sleep();
-
-
 
   std::string selected_map_key;
   if (!getSelectedMapKeyIfSet(&selected_map_key)) {
@@ -146,16 +125,6 @@ int ReLocalizationEvaluationPlugin::evaluateReLocalizationAccuracyForAllBenchmar
                << "elq command.";
     return common::kStupidUserError;
   }
-
-  // Loop through all missions and evaluate against key map
-    // Get loop closure between one mission and key map and save localized keyframes
-    // -  Concurrently get the transformation between the two missions
-
-    // Remove connections (loopclosures) with residual over certain threshold (e.g 0.5m)
-
-    // use rpg trajectory to draw the trajectory of the mission minimizing the error (resdiuals of the loop closure)
-
-    // compare resulting position of keyframes (with newly drawn trajectory) with the ground truth
 
   VIMapLocalizer localizer(map.get());
   return localizer.reLocalizeAccuracyAllMissions(selected_map_key);
